@@ -91,7 +91,7 @@ button {
   padding: 16px 108px 16px 28px;
   color: #ffffff;
   background: var(--black);
-  border-bottom: 4px solid var(--red);
+  border-bottom: 1px solid #24272d;
 }
 
 .brand {
