@@ -566,6 +566,15 @@ p {
   display: block;
 }
 
+.local-image-strip {
+  padding-top: 4px;
+}
+
+.asset-note {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .image-placeholder {
   border: 1px dashed #ffced0;
   border-radius: 8px;

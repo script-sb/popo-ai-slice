@@ -326,7 +326,7 @@ function threadMessage(message) {
         <strong>${escapeHtml(message.sender || "未知成员")}</strong>
         <time>${formatTime(message.t_msg)}</time>
       </div>
-      <div class="rich-message">${renderRichContent(message.content)}</div>
+      <div class="rich-message">${renderRichContent(message.content, message.localImages)}</div>
     </article>
   `;
 }
@@ -404,7 +404,7 @@ function buildReplyDraft(cluster, alerts) {
   return `这条我建议先纳入日/周报跟踪。\n${actions}`;
 }
 
-function renderRichContent(content) {
+function renderRichContent(content, localImages = []) {
   const raw = String(content || "");
   const urls = extractMediaUrls(raw);
   const safeText = escapeHtml(raw).replace(/\[?https?:\/\/[^\]\s]+]?/g, "").trim();
@@ -415,10 +415,20 @@ function renderRichContent(content) {
         </a>
       `).join("")}</div>`
     : "";
-  const placeholder = /\[图片\]/.test(raw) && !urls.length
-    ? `<div class="image-placeholder">图片占位：当前 POPO 搜索结果只返回 [图片]，需要后端接入附件下载接口后才能展示原图。</div>`
+  const localImageHtml = localImages.length
+    ? `<div class="image-strip local-image-strip">
+        ${localImages.map((image) => `
+          <a href="${escapeHtml(assetUrl(image.url))}" target="_blank" rel="noreferrer" title="本地候选图片：${escapeHtml(image.source || "")}">
+            <img src="${escapeHtml(assetUrl(image.url))}" alt="POPO 本地候选图片" loading="lazy" />
+          </a>
+        `).join("")}
+      </div>
+      <small class="asset-note">本地候选图片，后续接入 WCDB 索引后可精确匹配。</small>`
     : "";
-  return `<p>${safeText || escapeHtml(raw)}</p>${imageHtml}${placeholder}`;
+  const placeholder = /\[图片\]/.test(raw) && !urls.length && !localImages.length
+    ? `<div class="image-placeholder">图片占位：当前 POPO 搜索结果只返回 [图片]，本地缓存未找到时间相近图片。</div>`
+    : "";
+  return `<p>${safeText || escapeHtml(raw)}</p>${imageHtml}${localImageHtml}${placeholder}`;
 }
 
 function extractMediaUrls(content) {
@@ -430,6 +440,12 @@ function riskClass(level) {
   if (level === "P0" || level === "P1" || level === "高") return "level-high";
   if (level === "P2" || level === "中") return "level-mid";
   return "level-low";
+}
+
+function assetUrl(url) {
+  if (!url) return "";
+  if (/^https?:\/\//.test(url)) return url;
+  return `${localApiBase}${url}`;
 }
 
 async function fetchJson(url, options) {

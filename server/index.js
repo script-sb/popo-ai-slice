@@ -16,6 +16,7 @@ const clients = new Set();
 let isSyncing = false;
 let lastSyncError = "";
 let lastSyncAt = state.lastSyncAt || null;
+let assetCache = { builtAt: 0, images: [], byId: new Map() };
 
 const mentionAliases = ["@孙斌", "@sunbin", "@sunbin05", "@我"];
 const projectKeywords = ["H55", "H74", "Joker", "角色", "动作", "场景", "美术", "外包", "报价群"];
@@ -73,6 +74,7 @@ const server = http.createServer(async (req, res) => {
     if (req.url === "/api/queues") return sendJson(res, buildQueues());
     if (req.url === "/api/clusters") return sendJson(res, buildClusters());
     if (req.url === "/api/digest/today") return sendJson(res, buildTodayDigest());
+    if (req.url.startsWith("/api/local-assets/")) return sendLocalAsset(req, res);
     if (req.url === "/api/sync-now" && (req.method === "POST" || req.method === "GET")) {
       const result = await syncNow("manual");
       return sendJson(res, result);
@@ -80,6 +82,11 @@ const server = http.createServer(async (req, res) => {
     if (req.url === "/events") return openEvents(req, res);
     return sendJson(res, { error: "not_found" }, 404);
   } catch (error) {
+    console.error(error.stack || error.message);
+    if (res.headersSent) {
+      res.end();
+      return;
+    }
     sendJson(res, { error: error.message }, 500);
   }
 });
@@ -343,7 +350,7 @@ function recentMessages() {
 }
 
 function recentDecoratedMessages() {
-  return state.messages.slice(-200).map(decorateMessage).sort((a, b) => b.t_msg - a.t_msg);
+  return state.messages.slice(-200).map(decorateMessage).map(enrichLocalAssets).sort((a, b) => b.t_msg - a.t_msg);
 }
 
 function recentAlerts() {
@@ -352,6 +359,12 @@ function recentAlerts() {
 
 function decorateMessage(message) {
   return { ...message, ...deriveMessageMeta(message) };
+}
+
+function enrichLocalAssets(message) {
+  if (!/\[图片\]|\[image\]|https?:\/\//i.test(message.content || "")) return { ...message, localImages: [] };
+  const images = findLocalImagesNear(message.t_msg, 12 * 60 * 1000).slice(0, 6);
+  return { ...message, localImages: images };
 }
 
 function deriveMessageMeta(message) {
@@ -487,6 +500,150 @@ function sendCorsHeaders(res) {
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   res.setHeader("Access-Control-Allow-Private-Network", "true");
+}
+
+function sendLocalAsset(req, res) {
+  sendCorsHeaders(res);
+  const id = decodeURIComponent(req.url.replace("/api/local-assets/", "").split("?")[0]);
+  const index = getLocalAssetIndex();
+  const item = index.byId.get(id);
+  if (!item || !fs.existsSync(item.path)) {
+    res.writeHead(404, { "Content-Type": "application/json; charset=utf-8" });
+    res.end(JSON.stringify({ error: "asset_not_found" }));
+    return;
+  }
+  res.writeHead(200, {
+    "Content-Type": item.mime || "application/octet-stream",
+    "Cache-Control": "private, max-age=3600"
+  });
+  fs.createReadStream(item.path).pipe(res);
+}
+
+function findLocalImagesNear(time, windowMs) {
+  const target = Number(time) || Date.now();
+  return getLocalAssetIndex().images
+    .filter((image) => Math.abs(image.mtimeMs - target) <= windowMs)
+    .sort((a, b) => Math.abs(a.mtimeMs - target) - Math.abs(b.mtimeMs - target))
+    .map((image) => ({
+      id: image.id,
+      url: `/api/local-assets/${encodeURIComponent(image.id)}`,
+      name: image.name,
+      size: image.size,
+      mime: image.mime,
+      lastWriteTime: new Date(image.mtimeMs).toISOString(),
+      timeDistanceMs: Math.abs(image.mtimeMs - target),
+      source: image.source
+    }));
+}
+
+function getLocalAssetIndex() {
+  const ttl = 60 * 1000;
+  if (Date.now() - assetCache.builtAt < ttl && assetCache.images.length) return assetCache;
+
+  const byId = new Map();
+  const images = [];
+  const recentSince = Date.now() - 2 * 24 * 60 * 60 * 1000;
+  for (const root of localImageRoots()) {
+    if (!fs.existsSync(root.path)) continue;
+    for (const file of walkFiles(root.path, 2, 20000)) {
+      if (file.mtimeMs < recentSince) continue;
+      const mimeFromName = detectImageMimeByName(file.path);
+      const mime = mimeFromName || detectImageMime(file.path, readHeader(file.path, 16));
+      if (!mime) continue;
+      const id = hashText(file.path);
+      const item = {
+        id,
+        path: file.path,
+        name: path.basename(file.path),
+        size: file.size,
+        mtimeMs: file.mtimeMs,
+        mime,
+        source: root.name
+      };
+      byId.set(id, item);
+      images.push(item);
+    }
+  }
+  images.sort((a, b) => b.mtimeMs - a.mtimeMs);
+  assetCache = { builtAt: Date.now(), images, byId };
+  return assetCache;
+}
+
+function localImageRoots() {
+  const user = "sunbin05@corp.netease.com";
+  const userRoot = path.join(process.env.LOCALAPPDATA || "", "netease", "popo", "users", user);
+  return [
+    { name: "POPO image", path: path.join(userRoot, "image") },
+    { name: "POPO thumbimage", path: path.join(userRoot, "thumbimage") },
+    { name: "MyPopo image", path: path.join(process.env.APPDATA || "", "MyPopo", "image") }
+  ];
+}
+
+function walkFiles(root, maxDepth, maxFiles) {
+  const files = [];
+  const stack = [{ dir: root, depth: 0 }];
+  while (stack.length && files.length < maxFiles) {
+    let entries = [];
+    const current = stack.pop();
+    try {
+      entries = fs.readdirSync(current.dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      const fullPath = path.join(current.dir, entry.name);
+      if (entry.isDirectory() && current.depth < maxDepth) {
+        stack.push({ dir: fullPath, depth: current.depth + 1 });
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      try {
+        const stat = fs.statSync(fullPath);
+        files.push({ path: fullPath, size: stat.size, mtimeMs: stat.mtimeMs });
+      } catch {
+        // Ignore files being written by POPO.
+      }
+    }
+  }
+  return files;
+}
+
+function readHeader(file, bytes) {
+  try {
+    const fd = fs.openSync(file, "r");
+    const buffer = Buffer.alloc(bytes);
+    const read = fs.readSync(fd, buffer, 0, bytes, 0);
+    fs.closeSync(fd);
+    return buffer.subarray(0, read);
+  } catch {
+    return Buffer.alloc(0);
+  }
+}
+
+function detectImageMime(name, header) {
+  const ext = path.extname(name).toLowerCase();
+  if (header[0] === 0xff && header[1] === 0xd8 && header[2] === 0xff) return "image/jpeg";
+  if (header.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return "image/png";
+  if (header.subarray(0, 6).toString("ascii").startsWith("GIF")) return "image/gif";
+  if (header.subarray(0, 4).toString("ascii") === "RIFF" && header.subarray(8, 12).toString("ascii") === "WEBP") return "image/webp";
+  if ([".png", ".jpg", ".jpeg", ".gif", ".webp"].includes(ext)) return `image/${ext.replace(".", "").replace("jpg", "jpeg")}`;
+  return "";
+}
+
+function detectImageMimeByName(name) {
+  const ext = path.extname(name).toLowerCase();
+  if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
+  if (ext === ".png") return "image/png";
+  if (ext === ".gif") return "image/gif";
+  if (ext === ".webp") return "image/webp";
+  if (ext === ".bmp") return "image/bmp";
+  return "";
+}
+
+function hashText(text) {
+  let hash = 5381;
+  for (let i = 0; i < text.length; i += 1) hash = ((hash << 5) + hash) ^ text.charCodeAt(i);
+  return (hash >>> 0).toString(36);
 }
 
 function loadState() {
