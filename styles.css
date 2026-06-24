@@ -470,6 +470,7 @@ p {
 
 .selected-message,
 .action-card,
+.permission-card,
 .reply-draft,
 .digest-preview {
   border: 1px solid var(--line);
@@ -496,6 +497,27 @@ p {
 .selected-message p {
   color: #374151;
   line-height: 1.65;
+}
+
+.cluster-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.quiet-button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+  color: #374151;
+  font-weight: 800;
+  background: #ffffff;
+}
+
+.quiet-button:hover {
+  color: var(--red-dark);
+  border-color: var(--red);
+  background: var(--red-soft);
 }
 
 .message-thread {
@@ -592,6 +614,7 @@ p {
 }
 
 .action-card h3,
+.permission-card h3,
 .reply-draft h3,
 .digest-preview h3 {
   margin-bottom: 10px;
@@ -601,6 +624,41 @@ p {
 .action-list {
   display: grid;
   gap: 10px;
+}
+
+.permission-card {
+  display: grid;
+  gap: 12px;
+}
+
+.permission-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.permission-item {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--surface-soft);
+}
+
+.permission-item.active {
+  border-color: var(--red);
+  background: var(--red-soft);
+}
+
+.permission-item strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.permission-item p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .risk-row {

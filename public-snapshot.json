@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-06-24T10:24:10.343Z",
+  "generatedAt": "2026-06-24T10:32:32.508Z",
   "source": "local-redacted-snapshot",
   "privacy": {
     "rawMessageContent": false,
@@ -12,49 +12,22 @@
   "health": {
     "ok": true,
     "service": "POPO 助手公网快照",
-    "lastSyncAt": "2026-06-24T10:23:46.753Z",
+    "lastSyncAt": "2026-06-24T10:32:27.762Z",
     "messageCount": 12,
     "alertCount": 8,
     "queueCounts": {
       "pending": 0,
-      "mentions": 1,
+      "mentions": 0,
       "direct": 0,
       "project": 2,
       "business": 0,
       "digest": 0,
-      "muted": 0
+      "muted": 1
     }
   },
   "queues": {
     "pending": [],
-    "mentions": [
-      {
-        "msg_id": "pub-1rfexmj-0",
-        "t_msg": 1782288005375,
-        "time": "2026-06-24T08:00:05.375Z",
-        "sender": "已脱敏",
-        "sender_uid": "",
-        "group_id": "",
-        "group_name": "H55-动作-益格-报价群",
-        "sourceType": "group",
-        "content": "公网快照：@你；业务标签：报价、文件；项目标签：H55、角色、动作；包含图片材料。",
-        "priority": "P0",
-        "priorityReason": "群内 @你，需要优先处理",
-        "mentionsMe": true,
-        "businessTags": [
-          "报价",
-          "文件"
-        ],
-        "projectTags": [
-          "H55",
-          "角色",
-          "动作",
-          "外包",
-          "报价群"
-        ],
-        "localImages": []
-      }
-    ],
+    "mentions": [],
     "direct": [],
     "project": [
       {
@@ -102,7 +75,34 @@
     ],
     "business": [],
     "digest": [],
-    "muted": []
+    "muted": [
+      {
+        "msg_id": "pub-1rfexmj-0",
+        "t_msg": 1782288005375,
+        "time": "2026-06-24T08:00:05.375Z",
+        "sender": "已脱敏",
+        "sender_uid": "",
+        "group_id": "",
+        "group_name": "H55-动作-益格-报价群",
+        "sourceType": "group",
+        "content": "公网快照：@你；业务标签：报价、文件；项目标签：H55、角色、动作；包含图片材料。",
+        "priority": "P0",
+        "priorityReason": "群内 @你，需要优先处理",
+        "mentionsMe": true,
+        "businessTags": [
+          "报价",
+          "文件"
+        ],
+        "projectTags": [
+          "H55",
+          "角色",
+          "动作",
+          "外包",
+          "报价群"
+        ],
+        "localImages": []
+      }
+    ]
   },
   "clusters": [
     {
@@ -113,7 +113,7 @@
       "topic": "报价",
       "priority": "P0",
       "priorityReason": "群内 @你，需要优先处理",
-      "status": "new",
+      "status": "muted",
       "messageCount": 3,
       "mentionsMe": true,
       "businessTags": [

@@ -37,6 +37,7 @@ const elements = {
   selectedMessage: document.querySelector("#selectedMessage"),
   riskList: document.querySelector("#riskList"),
   todoList: document.querySelector("#todoList"),
+  permissionList: document.querySelector("#permissionList"),
   replyDraft: document.querySelector("#replyDraft"),
   digestMeta: document.querySelector("#digestMeta"),
   digestPreview: document.querySelector("#digestPreview"),
@@ -338,14 +339,20 @@ function selectCluster(clusterId) {
     <span>${cluster.sourceType === "direct" ? "私聊" : "群聊"} · ${escapeHtml(cluster.groupName || cluster.title)}</span>
     <h3>${escapeHtml(cluster.title)}</h3>
     <p>${escapeHtml(cluster.summary)}</p>
+    <div class="cluster-toolbar">
+      <button class="quiet-button" type="button" id="muteClusterButton">无需处理</button>
+    </div>
     <div class="message-thread">
       ${cluster.messages.map(threadMessage).join("")}
     </div>
   `;
 
+  document.querySelector("#muteClusterButton")?.addEventListener("click", () => muteSelectedCluster(cluster.id));
+
   const relatedAlerts = alertsForCluster(cluster);
   elements.riskList.innerHTML = riskItems(cluster, relatedAlerts);
   elements.todoList.innerHTML = cluster.suggestedActions.map((item) => `<p class="todo-item">${escapeHtml(item)}</p>`).join("");
+  elements.permissionList.innerHTML = permissionItems(cluster);
   elements.replyDraft.value = buildReplyDraft(cluster, relatedAlerts);
 }
 
@@ -359,6 +366,68 @@ function threadMessage(message) {
       <div class="rich-message">${renderRichContent(message.content, message.localImages)}</div>
     </article>
   `;
+}
+
+async function muteSelectedCluster(clusterId) {
+  const cluster = state.clusters.find((item) => item.id === clusterId);
+  if (!cluster) return;
+  try {
+    await fetchJson(`${localApiBase}/api/clusters/mute`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: clusterId })
+    });
+    state.activeQueue = "muted";
+    state.queueLocked = true;
+    state.selectedClusterId = clusterId;
+    await refreshAll();
+  } catch {
+    moveClusterToMuted(clusterId);
+  }
+}
+
+function moveClusterToMuted(clusterId) {
+  const cluster = state.clusters.find((item) => item.id === clusterId);
+  if (!cluster || !cluster.messages.length) return;
+  const representative = cluster.messages[0];
+  cluster.status = "muted";
+  for (const key of Object.keys(state.queues)) {
+    state.queues[key] = (state.queues[key] || []).filter((message) => message.msg_id !== representative.msg_id);
+  }
+  state.queues.muted ||= [];
+  state.queues.muted.push(representative);
+  state.health.queueCounts = Object.fromEntries(Object.entries(state.queues).map(([key, items]) => [key, items.length]));
+  state.activeQueue = "muted";
+  state.queueLocked = true;
+  state.selectedClusterId = clusterId;
+  renderQueues();
+  renderClusters();
+}
+
+function permissionItems(cluster) {
+  const modes = [
+    {
+      key: "申请回复",
+      detail: "助手只生成建议回复，由你决定是否继续。",
+      active: cluster.priority === "P0" || cluster.mentionsMe
+    },
+    {
+      key: "审批回复",
+      detail: "助手生成完整回复草稿，发送前需要你审批。",
+      active: cluster.priority === "P1" || cluster.businessTags.length > 0
+    },
+    {
+      key: "托管",
+      detail: "低风险固定流程可自动处理并记录日志。",
+      active: cluster.priority === "P4" || cluster.status === "muted"
+    }
+  ];
+  return modes.map((mode) => `
+    <article class="permission-item${mode.active ? " active" : ""}">
+      <strong>${mode.key}</strong>
+      <p>${mode.detail}</p>
+    </article>
+  `).join("");
 }
 
 function alertsForCluster(cluster) {
@@ -392,6 +461,7 @@ function clearSelection() {
   elements.selectedMessage.innerHTML = `<span>未选择会话</span><p>当前队列暂无可处理会话。</p>`;
   elements.riskList.innerHTML = `<p class="muted">暂无选中会话。</p>`;
   elements.todoList.innerHTML = `<p class="muted">暂无选中会话。</p>`;
+  elements.permissionList.innerHTML = `<p class="muted">选择会话后显示建议模式。</p>`;
   elements.replyDraft.value = "";
 }
 

@@ -75,6 +75,14 @@ const server = http.createServer(async (req, res) => {
     if (req.url === "/api/clusters") return sendJson(res, buildClusters());
     if (req.url === "/api/digest/today") return sendJson(res, buildTodayDigest());
     if (req.url.startsWith("/api/local-assets/")) return sendLocalAsset(req, res);
+    if (req.url === "/api/clusters/mute" && req.method === "POST") {
+      const body = await readRequestJson(req);
+      if (!body.id) return sendJson(res, { error: "missing_cluster_id" }, 400);
+      state.mutedClusterIds[body.id] = new Date().toISOString();
+      saveState();
+      broadcast({ type: "sync", payload: { reason: "mute_cluster", clusterId: body.id, lastSyncAt } });
+      return sendJson(res, { ok: true, id: body.id });
+    }
     if (req.url === "/api/sync-now" && (req.method === "POST" || req.method === "GET")) {
       const result = await syncNow("manual");
       return sendJson(res, result);
@@ -241,6 +249,7 @@ function emptyQueues() {
 }
 
 function queueForCluster(cluster) {
+  if (state.mutedClusterIds[cluster.id]) return "muted";
   if (cluster.sourceType === "direct") return "direct";
   if (cluster.mentionsMe) return "mentions";
   if (cluster.priority === "P4") return "muted";
@@ -295,6 +304,7 @@ function buildClusters() {
       return {
         ...cluster,
         latestAt: sorted[0]?.t_msg || 0,
+        status: state.mutedClusterIds[cluster.id] ? "muted" : cluster.status,
         messages: sorted.slice(0, 12),
         summary: buildClusterSummary({ ...cluster, messages: sorted }),
         suggestedActions: suggestedActionsForCluster({ ...cluster, messages: sorted })
@@ -522,6 +532,28 @@ function sendCorsHeaders(res) {
   res.setHeader("Access-Control-Allow-Private-Network", "true");
 }
 
+function readRequestJson(req) {
+  return new Promise((resolve, reject) => {
+    let raw = "";
+    req.on("data", (chunk) => {
+      raw += chunk;
+      if (raw.length > 1024 * 1024) {
+        req.destroy();
+        reject(new Error("request_too_large"));
+      }
+    });
+    req.on("end", () => {
+      if (!raw.trim()) return resolve({});
+      try {
+        resolve(JSON.parse(raw));
+      } catch {
+        reject(new Error("invalid_json"));
+      }
+    });
+    req.on("error", reject);
+  });
+}
+
 function sendLocalAsset(req, res) {
   sendCorsHeaders(res);
   const id = decodeURIComponent(req.url.replace("/api/local-assets/", "").split("?")[0]);
@@ -667,7 +699,7 @@ function hashText(text) {
 }
 
 function loadState() {
-  const initial = { lastSyncAt: null, messageIds: {}, messages: [], alerts: [] };
+  const initial = { lastSyncAt: null, messageIds: {}, messages: [], alerts: [], mutedClusterIds: {} };
   if (!fs.existsSync(stateFile)) return initial;
   try {
     return { ...initial, ...readJson(stateFile) };

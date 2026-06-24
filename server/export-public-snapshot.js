@@ -116,6 +116,7 @@ function buildSafeQueues(clusters) {
 }
 
 function queueForCluster(cluster) {
+  if (cluster.status === "muted") return "muted";
   if (cluster.sourceType === "direct") return "direct";
   if (cluster.mentionsMe) return "mentions";
   if (cluster.priority === "P4") return "muted";
