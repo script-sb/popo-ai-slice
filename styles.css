@@ -19,9 +19,15 @@
   box-sizing: border-box;
 }
 
+html {
+  height: 100%;
+}
+
 body {
   margin: 0;
+  height: 100%;
   min-height: 100vh;
+  overflow: hidden;
   font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
   color: var(--text);
   background: var(--bg);
@@ -86,12 +92,16 @@ p {
 }
 
 .app-shell {
-  min-height: 100vh;
+  height: 100vh;
   display: grid;
   grid-template-rows: 76px minmax(0, 1fr);
+  overflow: hidden;
 }
 
 .top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: grid;
   grid-template-columns: 280px minmax(360px, 1fr) 260px;
   align-items: center;
@@ -193,15 +203,18 @@ p {
   grid-template-columns: minmax(420px, 0.95fr) minmax(560px, 1.35fr);
   gap: 18px;
   padding: 18px;
+  overflow: hidden;
 }
 
 .message-panel,
 .processing-panel {
   min-height: 0;
+  height: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface);
   box-shadow: var(--shadow);
+  overflow: hidden;
 }
 
 .message-panel {
@@ -216,6 +229,7 @@ p {
   gap: 14px;
   padding: 18px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .panel-head {
@@ -306,6 +320,7 @@ p {
   gap: 12px;
   padding: 14px 18px 18px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .message-group {
