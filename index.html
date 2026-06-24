@@ -225,6 +225,24 @@
               <button>群聊</button>
               <button class="active">直达</button>
             </div>
+            <section class="local-sync-card" id="localSyncCard">
+              <div>
+                <strong>本地同步服务</strong>
+                <span id="syncStatus">未连接</span>
+              </div>
+              <button id="syncNowButton" type="button">同步</button>
+              <dl>
+                <div>
+                  <dt>消息</dt>
+                  <dd id="syncMessageCount">-</dd>
+                </div>
+                <div>
+                  <dt>风险</dt>
+                  <dd id="syncAlertCount">-</dd>
+                </div>
+              </dl>
+              <button class="ghost-sync-button" id="loadLocalDigestButton" type="button">载入今日日报</button>
+            </section>
             <label class="small-search">
               <input type="search" placeholder="搜索" />
             </label>

@@ -128,6 +128,7 @@ const jumpButtons = document.querySelectorAll("[data-jump]");
 const panels = document.querySelectorAll(".panel");
 const activeTitle = document.querySelector("#activeTitle");
 const activeSubtitle = document.querySelector("#activeSubtitle");
+const localApiBase = "http://127.0.0.1:8787";
 
 sceneCards.forEach((item) => {
   item.addEventListener("click", () => activatePanel(item.dataset.panel));
@@ -160,6 +161,10 @@ document.querySelectorAll("[data-action]").forEach((button) => {
     if (action === "archive") renderArchive();
   });
 });
+
+document.querySelector("#syncNowButton")?.addEventListener("click", syncLocalMessages);
+document.querySelector("#loadLocalDigestButton")?.addEventListener("click", loadLocalDigest);
+initLocalBackend();
 
 function activatePanel(panelName) {
   panels.forEach((panel) => panel.classList.remove("active"));
@@ -399,6 +404,108 @@ function card(title, items) {
 
 function emptyState(text) {
   return `<div class="answer-box">${text}</div>`;
+}
+
+async function initLocalBackend() {
+  await refreshLocalHealth();
+  connectLocalEvents();
+}
+
+async function refreshLocalHealth() {
+  try {
+    const health = await fetchJson(`${localApiBase}/api/health`);
+    updateSyncStatus(health);
+  } catch {
+    updateSyncStatus(null);
+  }
+}
+
+async function syncLocalMessages() {
+  const status = document.querySelector("#syncStatus");
+  status.textContent = "同步中";
+  try {
+    const result = await fetchJson(`${localApiBase}/api/sync-now`, { method: "POST" });
+    await refreshLocalHealth();
+    status.textContent = result.ok ? `已同步 ${result.inserted} 条` : "同步失败";
+  } catch {
+    status.textContent = "未连接";
+  }
+}
+
+async function loadLocalDigest() {
+  try {
+    const digest = await fetchJson(`${localApiBase}/api/digest/today`);
+    activatePanel("digest");
+    document.querySelector("#digestCommand").value = "根据本地同步的 POPO 报价群消息生成今日日报";
+    document.querySelector("#digestInput").value = localDigestToText(digest);
+    renderDigest();
+  } catch {
+    document.querySelector("#digestResult").innerHTML = emptyState("本地同步服务未连接。请先运行：npm run server");
+  }
+}
+
+function updateSyncStatus(health) {
+  const card = document.querySelector("#localSyncCard");
+  const status = document.querySelector("#syncStatus");
+  const messageCount = document.querySelector("#syncMessageCount");
+  const alertCount = document.querySelector("#syncAlertCount");
+  if (!card || !status) return;
+
+  if (!health?.ok) {
+    card.classList.add("offline");
+    status.textContent = "未连接";
+    messageCount.textContent = "-";
+    alertCount.textContent = "-";
+    return;
+  }
+
+  card.classList.remove("offline");
+  status.textContent = health.lastSyncAt ? `已连接 ${formatLocalTime(health.lastSyncAt)}` : "已连接";
+  messageCount.textContent = health.messageCount;
+  alertCount.textContent = health.alertCount;
+}
+
+function connectLocalEvents() {
+  try {
+    const events = new EventSource(`${localApiBase}/events`);
+    events.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === "hello") updateSyncStatus(data.payload);
+      if (data.type === "sync") refreshLocalHealth();
+      if (data.type === "error") document.querySelector("#syncStatus").textContent = "同步异常";
+    };
+    events.onerror = () => updateSyncStatus(null);
+  } catch {
+    updateSyncStatus(null);
+  }
+}
+
+async function fetchJson(url, options) {
+  const response = await fetch(url, options);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+
+function localDigestToText(digest) {
+  const lines = [`${digest.date} POPO 报价群日报`, `消息数：${digest.messageCount}，风险提醒：${digest.alertCount}`, ""];
+  digest.groups.forEach((group) => {
+    lines.push(`【${group.name}】`);
+    group.progress.forEach((item) => lines.push(`- ${item}`));
+    group.todos.forEach((item) => lines.push(`待办：${item}`));
+    lines.push("");
+  });
+  if (digest.questions.length) {
+    lines.push("需要确认：");
+    digest.questions.forEach((question) => lines.push(`- ${question}`));
+  }
+  return lines.join("\n");
+}
+
+function formatLocalTime(value) {
+  return new Date(value).toLocaleTimeString("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }
 
 function analyzeWithSunbinSkill(text, scene) {

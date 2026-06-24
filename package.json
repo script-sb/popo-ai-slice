@@ -1,0 +1,9 @@
+{
+  "name": "popo-assistant",
+  "version": "0.2.0",
+  "private": true,
+  "scripts": {
+    "server": "node server/index.js",
+    "serve": "node server/index.js"
+  }
+}

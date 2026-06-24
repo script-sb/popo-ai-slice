@@ -706,6 +706,73 @@ textarea {
   background: var(--red);
 }
 
+.local-sync-card {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+  border: 1px solid #ffd8d8;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff7f7;
+}
+
+.local-sync-card > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.local-sync-card strong {
+  font-size: 14px;
+}
+
+.local-sync-card span,
+.local-sync-card dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.local-sync-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin: 0;
+}
+
+.local-sync-card dl div {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  background: #ffffff;
+}
+
+.local-sync-card dd {
+  margin: 3px 0 0;
+  color: var(--red-dark);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.local-sync-card > button {
+  border: 0;
+  border-radius: 8px;
+  min-height: 34px;
+  color: #ffffff;
+  font-weight: 800;
+  background: var(--red);
+}
+
+.local-sync-card .ghost-sync-button {
+  border: 1px solid #ffced0;
+  color: var(--red-dark);
+  background: #ffffff;
+}
+
+.local-sync-card.offline {
+  border-color: var(--line);
+  background: #ffffff;
+}
+
 .scene-list {
   display: grid;
   gap: 10px;
