@@ -1,19 +1,17 @@
 :root {
-  color-scheme: dark;
-  --bg: #070b12;
-  --nav: #0d1420;
-  --panel: #101827;
-  --panel-2: #151f32;
-  --panel-3: #1c2940;
-  --line: rgba(255, 255, 255, 0.08);
-  --text: #f5f7fb;
-  --muted: #97a1b3;
-  --soft: #c4cad6;
+  color-scheme: light;
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-2: #fafafa;
+  --text: #111111;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --black: #0f1115;
+  --black-2: #1f2329;
   --red: #d71920;
-  --red-2: #f04444;
-  --red-soft: rgba(215, 25, 32, 0.18);
-  --black-card: #0a111d;
-  --shadow: 0 22px 60px rgba(0, 0, 0, 0.42);
+  --red-dark: #a90f15;
+  --red-soft: #fff1f1;
+  --shadow: 0 14px 34px rgba(15, 17, 21, 0.08);
 }
 
 * {
@@ -25,9 +23,18 @@ body {
   min-height: 100vh;
   font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
   color: var(--text);
-  background:
-    radial-gradient(circle at 12% 0%, rgba(215, 25, 32, 0.22), transparent 28%),
-    linear-gradient(135deg, #05070c 0%, #111827 48%, #070b12 100%);
+  background: var(--bg);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
 }
 
 .corner-badge {
@@ -54,8 +61,8 @@ body {
   right: -42px;
   width: 158px;
   height: 32px;
-  background: linear-gradient(135deg, #ff3434, #a4000b);
-  box-shadow: 0 12px 26px rgba(215, 25, 32, 0.34);
+  background: linear-gradient(135deg, var(--red), var(--red-dark));
+  box-shadow: 0 12px 26px rgba(215, 25, 32, 0.24);
 }
 
 .corner-badge::after {
@@ -69,21 +76,11 @@ body {
   letter-spacing: 0;
   text-align: center;
 }
-button,
-input,
-textarea,
-select {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
 
 .app-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-rows: 82px minmax(0, 1fr);
+  grid-template-rows: 76px minmax(0, 1fr);
 }
 
 .top-nav {
@@ -91,10 +88,10 @@ button {
   grid-template-columns: 300px minmax(220px, 1fr) 360px;
   align-items: center;
   gap: 20px;
-  padding: 18px 108px 18px 28px;
-  border-bottom: 1px solid var(--line);
-  background: rgba(9, 15, 25, 0.88);
-  backdrop-filter: blur(18px);
+  padding: 16px 108px 16px 28px;
+  color: #ffffff;
+  background: var(--black);
+  border-bottom: 4px solid var(--red);
 }
 
 .brand {
@@ -112,8 +109,7 @@ button {
   border-radius: 8px;
   color: #ffffff;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--red), #8f0d12);
-  box-shadow: 0 12px 26px rgba(215, 25, 32, 0.28);
+  background: var(--red);
 }
 
 .brand strong,
@@ -128,7 +124,7 @@ button {
 
 .brand span {
   margin-top: 4px;
-  color: var(--muted);
+  color: #d1d5db;
   font-size: 13px;
 }
 
@@ -143,7 +139,7 @@ button {
   left: 16px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--muted);
+  color: #9ca3af;
   font-size: 13px;
 }
 
@@ -157,25 +153,26 @@ select,
   border-radius: 8px;
   color: var(--text);
   outline: none;
-  background: rgba(255, 255, 255, 0.06);
+  background: #ffffff;
 }
 
 .search-box input {
-  height: 46px;
+  height: 44px;
   padding: 0 16px 0 64px;
+  border-color: #30343a;
+  color: #ffffff;
+  background: var(--black-2);
 }
 
 .small-search input {
   height: 38px;
   padding: 0 14px;
-  color: #20242c;
-  background: #ffffff;
 }
 
 .nav-tools {
   display: flex;
   justify-content: flex-end;
-  gap: 14px;
+  gap: 12px;
 }
 
 .nav-tools button,
@@ -187,29 +184,30 @@ select,
   height: 38px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  color: var(--soft);
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  background: #ffffff;
+}
+
+.top-nav .nav-tools button {
+  color: #ffffff;
+  border-color: #30343a;
+  background: var(--black-2);
 }
 
 .nav-tools button:hover,
 .header-actions button:hover,
 .tool-button:hover {
-  color: #ffffff;
-  border-color: rgba(215, 25, 32, 0.62);
+  color: var(--red);
+  border-color: var(--red);
   background: var(--red-soft);
 }
 
 .board {
   min-height: 0;
   display: grid;
-  grid-template-columns: 316px minmax(420px, 1fr) 318px;
-  gap: 20px;
-  padding: 20px;
-}
-
-.left-pane,
-.right-pane {
-  min-width: 0;
+  grid-template-columns: 300px minmax(520px, 1fr) 300px;
+  gap: 18px;
+  padding: 18px;
 }
 
 .left-pane {
@@ -223,12 +221,12 @@ select,
 .chat-pane {
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(10, 17, 29, 0.9);
+  background: var(--surface);
   box-shadow: var(--shadow);
 }
 
 .side-panel {
-  padding: 20px;
+  padding: 18px;
 }
 
 .grow {
@@ -245,7 +243,7 @@ select,
 }
 
 .section-title {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 h1,
@@ -258,7 +256,7 @@ p {
 .section-title h2,
 .bot-head h2 {
   font-size: 19px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .section-title span,
@@ -278,7 +276,7 @@ p {
   grid-template-columns: minmax(0, 1fr) 42px;
   gap: 12px;
   align-items: center;
-  min-height: 96px;
+  min-height: 88px;
   border-bottom: 1px solid var(--line);
 }
 
@@ -290,7 +288,7 @@ p {
 .suggestion-item strong {
   display: block;
   margin: 5px 0;
-  color: var(--soft);
+  color: var(--text);
   font-size: 14px;
 }
 
@@ -302,31 +300,35 @@ p {
 
 .suggestion-item {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr);
+  grid-template-columns: 54px minmax(0, 1fr);
   gap: 12px;
   align-items: center;
-  min-height: 74px;
+  min-height: 70px;
 }
 
-.suggestion-item button {
-  height: 32px;
+.suggestion-item button,
+.send-button {
   border: 0;
   border-radius: 8px;
   color: #ffffff;
   background: var(--red);
 }
 
+.suggestion-item button {
+  height: 32px;
+}
+
 .chat-pane {
   min-width: 0;
   display: grid;
-  grid-template-rows: 90px minmax(0, 1fr);
+  grid-template-rows: 84px minmax(0, 1fr);
   overflow: hidden;
 }
 
 .chat-header {
-  padding: 18px 20px;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--line);
-  background: rgba(7, 11, 18, 0.72);
+  background: #ffffff;
 }
 
 .header-actions {
@@ -343,67 +345,97 @@ p {
 .chat-title strong,
 .agent-card span {
   display: block;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .agent-card {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--soft);
+  color: var(--text);
 }
 
 .avatar.red {
   width: 44px;
   height: 44px;
-  background: linear-gradient(135deg, #ff4b4b, #b80010);
+  background: var(--red);
 }
 
 .panel {
   display: none;
   min-height: 0;
-  padding: 22px 26px;
+  padding: 18px 22px;
   overflow-y: auto;
+  background: #ffffff;
 }
 
 .panel.active {
   display: grid;
-  grid-template-rows: minmax(330px, auto) auto auto;
-  gap: 18px;
+  grid-template-rows: minmax(260px, 1fr) auto auto;
+  gap: 16px;
 }
 
 .message-stack {
   display: grid;
   align-content: start;
-  gap: 20px;
+  gap: 14px;
+  min-height: 260px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  background:
+    linear-gradient(180deg, rgba(250, 250, 250, 0.92), rgba(255, 255, 255, 0.96)),
+    #ffffff;
 }
 
 .bubble {
-  max-width: 76%;
+  max-width: 78%;
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.05);
+  padding: 14px;
+  background: #ffffff;
 }
 
 .bubble p {
-  color: var(--soft);
+  color: var(--text);
   line-height: 1.65;
 }
 
 .bubble.bot {
-  justify-self: end;
-  background: rgba(28, 41, 64, 0.88);
+  justify-self: start;
+  background: #f3f4f6;
 }
 
 .bubble.user {
-  justify-self: start;
-  background: linear-gradient(135deg, rgba(215, 25, 32, 0.9), rgba(113, 15, 22, 0.92));
+  justify-self: end;
+  border-color: #ffced0;
+  background: var(--red-soft);
+}
+
+.bubble.text-only {
+  max-width: 70%;
 }
 
 .bubble.user.wide {
-  width: min(760px, 86%);
-  max-width: 86%;
+  width: 100%;
+  max-width: 100%;
+}
+
+.input-dock {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: var(--surface-2);
+}
+
+.input-dock .bubble {
+  width: 100%;
+  max-width: 100%;
+  justify-self: stretch;
+  border-color: var(--line);
+  background: #ffffff;
 }
 
 .toolbar-row {
@@ -415,8 +447,9 @@ p {
 
 label {
   display: block;
-  color: #ffffff;
+  color: var(--text);
   font-size: 13px;
+  font-weight: 700;
 }
 
 select,
@@ -427,41 +460,29 @@ select,
 }
 
 textarea {
-  min-height: 132px;
+  min-height: 118px;
   resize: vertical;
   padding: 13px;
   line-height: 1.58;
 }
 
 .compact-textarea {
-  min-height: 78px;
+  min-height: 72px;
   margin: 8px 0 12px;
-}
-
-.bubble.user textarea,
-.bubble.user input,
-.bubble.user select {
-  border-color: rgba(255, 255, 255, 0.22);
-  background: rgba(0, 0, 0, 0.2);
 }
 
 .composer {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 58px;
-  padding-top: 6px;
-  border-top: 1px solid var(--line);
+  min-height: 46px;
 }
 
 .send-button {
-  width: 42px;
-  height: 42px;
-  border: 0;
-  border-radius: 999px;
-  color: #ffffff;
-  background: var(--red);
-  box-shadow: 0 12px 26px rgba(215, 25, 32, 0.34);
+  min-width: 64px;
+  height: 38px;
+  padding: 0 14px;
+  font-weight: 800;
 }
 
 .composer span {
@@ -480,17 +501,19 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.055);
+  background: #ffffff;
 }
 
 .result-card h3 {
   margin-bottom: 10px;
   font-size: 15px;
-  color: #ffffff;
+  color: var(--text);
 }
 
 .intent-card {
   grid-column: 1 / -1;
+  border-color: #ffced0;
+  background: var(--red-soft);
 }
 
 .intent-card p {
@@ -509,24 +532,24 @@ textarea {
   display: inline-flex;
   align-items: center;
   min-height: 28px;
-  border: 1px solid rgba(215, 25, 32, 0.5);
+  border: 1px solid #ffced0;
   border-radius: 999px;
   padding: 0 10px;
-  color: #ffffff;
-  background: rgba(215, 25, 32, 0.18);
+  color: var(--red-dark);
+  background: #ffffff;
 }
 
 .result-card ul,
 .answer-box ul {
   margin: 0;
   padding-left: 18px;
-  color: var(--soft);
+  color: var(--text);
   line-height: 1.7;
 }
 
 .answer-box {
   min-height: 110px;
-  color: var(--soft);
+  color: var(--text);
   line-height: 1.7;
 }
 
@@ -556,7 +579,7 @@ textarea {
   align-items: center;
   min-height: 44px;
   border-bottom: 1px solid var(--line);
-  color: var(--soft);
+  color: var(--text);
 }
 
 .task-row:last-child {
@@ -569,16 +592,16 @@ textarea {
   border-radius: 999px;
   padding: 4px 10px;
   color: #ffffff;
-  background: rgba(215, 25, 32, 0.75);
+  background: var(--red);
 }
 
 .warn,
 .missing {
-  color: #ffb3b3;
+  color: var(--red);
 }
 
 .done {
-  color: #9be7c0;
+  color: #047857;
 }
 
 .check-list {
@@ -594,7 +617,7 @@ textarea {
 
 .bot-panel {
   min-height: 100%;
-  padding: 20px;
+  padding: 18px;
   overflow: hidden;
 }
 
@@ -606,15 +629,17 @@ textarea {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0;
-  margin-bottom: 18px;
-  border-bottom: 1px solid var(--line);
+  margin-bottom: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .bot-tabs button {
-  min-height: 40px;
+  min-height: 38px;
   border: 0;
   color: var(--muted);
-  background: transparent;
+  background: #ffffff;
 }
 
 .bot-tabs button.active {
@@ -624,21 +649,21 @@ textarea {
 
 .scene-list {
   display: grid;
-  gap: 12px;
-  margin-top: 20px;
+  gap: 10px;
+  margin-top: 16px;
 }
 
 .scene-card {
   display: grid;
   grid-template-columns: 58px minmax(0, 1fr);
   gap: 6px 12px;
-  min-height: 76px;
-  border: 1px solid transparent;
+  min-height: 74px;
+  border: 1px solid var(--line);
   border-radius: 8px;
   padding: 12px;
-  color: var(--soft);
+  color: var(--text);
   text-align: left;
-  background: rgba(255, 255, 255, 0.08);
+  background: #ffffff;
 }
 
 .scene-card strong,
@@ -648,19 +673,17 @@ textarea {
 
 .scene-card span {
   grid-row: 1 / span 2;
-  color: #ffffff;
+  color: var(--muted);
 }
 
 .scene-card:hover,
 .scene-card.active {
-  border-color: rgba(215, 25, 32, 0.74);
-  background: linear-gradient(135deg, rgba(215, 25, 32, 0.92), rgba(68, 14, 22, 0.88));
+  border-color: var(--red);
+  background: var(--red-soft);
 }
 
-.scene-card.active small,
-.scene-card.active span,
 .scene-card.active strong {
-  color: #ffffff;
+  color: var(--red-dark);
 }
 
 @media (max-width: 1180px) {
@@ -699,6 +722,10 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  .top-nav {
+    padding-right: 88px;
+  }
+
   .board {
     padding: 12px;
   }
@@ -724,6 +751,7 @@ textarea {
   }
 
   .bubble,
+  .bubble.text-only,
   .bubble.user.wide {
     width: 100%;
     max-width: 100%;
