@@ -11,16 +11,18 @@ const samples = {
     "@POPO AI 请归档 H55 角色立绘第 3 批材料。附件：报价单.xlsx、合同扫描.pdf、验收图.zip。缺供应商营业执照和最终验收确认截图，后续可能要同步 Muse / ArcoLab。"
 };
 
-const navItems = document.querySelectorAll(".nav-item");
+const sceneCards = document.querySelectorAll(".scene-card");
+const jumpButtons = document.querySelectorAll("[data-jump]");
 const panels = document.querySelectorAll(".panel");
+const activeTitle = document.querySelector("#activeTitle");
+const activeSubtitle = document.querySelector("#activeSubtitle");
 
-navItems.forEach((item) => {
-  item.addEventListener("click", () => {
-    navItems.forEach((nav) => nav.classList.remove("active"));
-    panels.forEach((panel) => panel.classList.remove("active"));
-    item.classList.add("active");
-    document.querySelector(`#panel-${item.dataset.panel}`).classList.add("active");
-  });
+sceneCards.forEach((item) => {
+  item.addEventListener("click", () => activatePanel(item.dataset.panel));
+});
+
+jumpButtons.forEach((button) => {
+  button.addEventListener("click", () => activatePanel(button.dataset.jump));
 });
 
 document.querySelectorAll(".sample").forEach((button) => {
@@ -47,19 +49,31 @@ document.querySelectorAll("[data-action]").forEach((button) => {
   });
 });
 
+function activatePanel(panelName) {
+  panels.forEach((panel) => panel.classList.remove("active"));
+  sceneCards.forEach((card) => card.classList.remove("active"));
+
+  const panel = document.querySelector(`#panel-${panelName}`);
+  const card = document.querySelector(`.scene-card[data-panel="${panelName}"]`);
+  panel.classList.add("active");
+  card?.classList.add("active");
+  activeTitle.textContent = panel.dataset.title;
+  activeSubtitle.textContent = panel.dataset.subtitle;
+}
+
 function renderDigest() {
   const input = valueOf("digestInput");
   const group = valueOf("digestGroup") || "当前群";
   const range = document.querySelector("#digestRange").value;
   const result = document.querySelector("#digestResult");
   if (!input) {
-    result.innerHTML = emptyState("请先粘贴群消息，或接入 POPO 群消息后自动拉取。");
+    result.innerHTML = emptyState("请先粘贴群消息，或载入 POPO 切片。");
     return;
   }
   result.innerHTML = [
-    card(`${group} ${range}进展`, ["多个 H55 报价群有报价单、报价排期或报价修改需要确认。", "验收侧已有 POPO 验收记录上传问题，需要明确材料口径。"]),
-    card("风险", ["个画对接中明确提到需求保密等级高，验收材料不能包含 PSD 或制作内容。", "部分需求暂停或内部调整，报价确认前需要先确认需求是否继续。"]),
-    card("待办", ["孙斌 / 相关项目同学：确认报价排期和报价单。", "个画对接负责人：补充 POPO 群内项目组确认收稿截图。"]),
+    card(`${group} ${range}进展`, ["多个报价群有报价单、报价排期或报价修改需要确认。", "验收侧已有 POPO 验收记录上传问题，需要明确材料口径。"]),
+    card("风险", ["需求保密等级高，验收材料不能包含 PSD 或制作内容。", "部分需求暂停或内部调整，报价确认前需要先确认需求是否继续。"]),
+    card("待办", ["确认报价排期和报价单。", "补充 POPO 群内项目组确认收稿截图。"]),
     card("需要确认", ["报价排期是否已最终确认？", "验收记录上传入口和截图标准是否统一？", "暂停需求是否需要撤回供应商报价动作？"])
   ].join("");
 }
@@ -74,7 +88,7 @@ function renderSupplier() {
   result.innerHTML = `
     <table class="record-table">
       <tr><th>字段</th><th>整理结果</th></tr>
-      <tr><td>供应商 / 群</td><td>方寸互动、点石、寅艾、熠维等 H55 报价相关群</td></tr>
+      <tr><td>供应商 / 群</td><td>供应商甲、供应商乙、供应商丙等报价相关群</td></tr>
       <tr><td>报价</td><td>多条消息涉及报价单、报价排期、排期报价修改</td></tr>
       <tr><td>交付时间</td><td>当前切片未出现明确日期，需要继续读取附件或上下文</td></tr>
       <tr><td>修改意见</td><td>有需求暂停、内部调整、报价需最终确认等信息</td></tr>
