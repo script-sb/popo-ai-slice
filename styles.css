@@ -30,6 +30,45 @@ body {
     linear-gradient(135deg, #05070c 0%, #111827 48%, #070b12 100%);
 }
 
+.corner-badge {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 20;
+  width: 112px;
+  height: 112px;
+  overflow: hidden;
+  pointer-events: none;
+  color: transparent;
+}
+
+.corner-badge::before,
+.corner-badge::after {
+  position: absolute;
+  transform: rotate(45deg);
+}
+
+.corner-badge::before {
+  content: "";
+  top: 20px;
+  right: -42px;
+  width: 158px;
+  height: 32px;
+  background: linear-gradient(135deg, #ff3434, #a4000b);
+  box-shadow: 0 12px 26px rgba(215, 25, 32, 0.34);
+}
+
+.corner-badge::after {
+  content: "内测版";
+  top: 27px;
+  right: 5px;
+  width: 78px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-align: center;
+}
 button,
 input,
 textarea,
@@ -52,7 +91,7 @@ button {
   grid-template-columns: 300px minmax(220px, 1fr) 360px;
   align-items: center;
   gap: 20px;
-  padding: 18px 28px;
+  padding: 18px 108px 18px 28px;
   border-bottom: 1px solid var(--line);
   background: rgba(9, 15, 25, 0.88);
   backdrop-filter: blur(18px);
