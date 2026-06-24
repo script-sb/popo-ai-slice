@@ -706,27 +706,6 @@ textarea {
   background: var(--red);
 }
 
-.rule-status {
-  display: grid;
-  gap: 4px;
-  margin-bottom: 14px;
-  border: 1px solid #ffd8d8;
-  border-radius: 8px;
-  padding: 12px;
-  background: var(--red-soft);
-}
-
-.rule-status strong {
-  color: var(--red-dark);
-  font-size: 14px;
-}
-
-.rule-status span {
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
 .scene-list {
   display: grid;
   gap: 10px;
