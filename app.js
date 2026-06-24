@@ -12,6 +12,117 @@ const samples = {
     "@POPO AI 请归档 H55 角色立绘第 3 批材料。附件：报价单.xlsx、合同扫描.pdf、验收图.zip。缺供应商营业执照和最终验收确认截图，后续可能要同步 Muse / ArcoLab。"
 };
 
+const sunbinRiskRules = [
+  {
+    id: "quote-reviewable",
+    level: "高",
+    scene: ["digest", "supplier", "process", "archive"],
+    title: "报价材料不可复核",
+    keywords: ["报价", "报价单", "报价表", "截图", "糊", "源文件", "合计", "数量", "资源", "单号", "PDF"],
+    concern: "报价表需要能让不熟项目的审核同学独立核对需求名、资源、数量、环节、人天、合计和单号。",
+    action: "补清晰报价表或 PDF，截图标注资源对应关系，并把确认记录补到任务详情。"
+  },
+  {
+    id: "reuse-model",
+    level: "中",
+    scene: ["digest", "supplier", "process"],
+    title: "复用模型或 AI 模型影响人天判断",
+    keywords: ["复用", "白模", "AI", "模型", "高模", "低模", "中模", "贴图", "烘焙", "粘连", "对称"],
+    concern: "有模型不等于自动降人天，需要确认复用比例、拆分难度、贴图和重新制作工作量。",
+    action: "请接口或制作负责人确认复用比例，再让供应商按实际工作量重报或备注。"
+  },
+  {
+    id: "change-supplement",
+    level: "高",
+    scene: ["digest", "supplier", "process", "archive"],
+    title: "需求变更、取消或增补未同步报价",
+    keywords: ["变更", "增补", "补充", "取消", "暂停", "删减", "返修", "重报", "重新报价", "原单", "关单"],
+    concern: "范围减少未改零会多付，范围增加未走增补会影响结算依据。",
+    action: "确认原单是否已关单；未关单优先原单变更，已关单则判断新单、拆单或增补。"
+  },
+  {
+    id: "arcolab-apc-split",
+    level: "中",
+    scene: ["digest", "supplier", "process", "archive"],
+    title: "ArcoLab / APC 单据和报价口径混淆",
+    keywords: ["ArcoLab", "APC", "单独任务", "拆单", "总报价", "任务详情", "人天数", "限制", "上限"],
+    concern: "独立 ArcoLab 任务要单独确认排期报价；APC 总报价、人天和任务详情不一致会影响审核。",
+    action: "把整单报价表、任务详情标记和 APC 单号对齐，超过限制时走特批或最新 APC 指引。"
+  },
+  {
+    id: "contract-validity",
+    level: "高",
+    scene: ["digest", "supplier", "process", "archive"],
+    title: "合同或主体材料未就绪",
+    keywords: ["合同", "电子签", "签署", "营业执照", "开户", "主体", "框架", "单笔", "补充协议", "额度", "倒签"],
+    concern: "合同不存在、主体不一致或额度不足时，不建议继续发包、入场或结款。",
+    action: "先确认有效合同、签署状态、合同额度和主体信息；缺资质材料先补齐。"
+  },
+  {
+    id: "settlement-quality",
+    level: "高",
+    scene: ["digest", "supplier", "process", "archive"],
+    title: "结算金额、人天和质量扣款不一致",
+    keywords: ["结算", "结款", "金额", "人天", "扣款", "质量", "验收比例", "操作日志", "发票", "开单金额"],
+    concern: "质量验收比例会同时影响金额和最终结算人天，系统页面和操作日志必须说清楚。",
+    action: "核对报价单、APC 单、验收记录、扣款比例和发票信息，异常时带单号找支持同事确认。"
+  },
+  {
+    id: "acceptance-confidential",
+    level: "中",
+    scene: ["digest", "process", "archive"],
+    title: "验收与保密材料口径不清",
+    keywords: ["验收", "收稿", "确认截图", "PSD", "保密", "高保", "制作内容", "Muse", "QC"],
+    concern: "验收材料需要可追溯，但高保或制作内容不能随意出现在截图、PSD 或归档附件里。",
+    action: "保留项目组确认收稿截图，按保密要求裁剪或替换敏感画面，再同步 Muse / QC / ArcoLab。"
+  },
+  {
+    id: "dispatch-before-order",
+    level: "高",
+    scene: ["digest", "supplier", "process"],
+    title: "外派 / 驻场先入场后补单",
+    keywords: ["外派", "驻场", "入场", "续期", "替换", "招聘", "派工", "开单", "报价完成", "三级经理"],
+    concern: "驻场外包应先确认制作内容、开单和供应商报价，不能先入场后补单。",
+    action: "核对是否替换、单次是否超过 1 个月、累计是否超过 3 个月；长周期需三级经理确认。"
+  },
+  {
+    id: "guide-price",
+    level: "中",
+    scene: ["digest", "supplier", "process"],
+    title: "单价超过指导价或职级不明",
+    keywords: ["指导价", "超上限", "职级", "单价", "OP", "特批", "报备", "乘系数"],
+    concern: "外派单价不能只看姓名和岗位，需核对项目、环节、PM、入场时间、职级和乘系数后单价。",
+    action: "补齐指导价超上限模板字段，邮件报备审批后再推进入场或报价确认。"
+  },
+  {
+    id: "supplier-compliance",
+    level: "中",
+    scene: ["supplier", "process", "archive"],
+    title: "供应商准入和派工材料不完整",
+    keywords: ["供应商", "简历", "身份证", "在职", "委派函", "NDA", "手机号", "照片", "银行", "账户"],
+    concern: "供应商人员、银行信息、委派函、NDA 或账号权限缺失，会影响入场、保密协议和结算效率。",
+    action: "补齐供应商风险确认、真实手机号、无美颜照片、委派函、高保 NDA 和银行信息变更材料。"
+  },
+  {
+    id: "price-private-chat",
+    level: "中",
+    scene: ["supplier", "process"],
+    title: "供应商绕开采购谈价",
+    keywords: ["私聊", "议价", "价格", "采购", "接口", "PM", "谈价"],
+    concern: "供应商不应绕开采购和项目接口私下确认价格，避免报价依据不可追溯。",
+    action: "把议价和确认口径拉回报价群或采购 BP 记录，保留最终确认截图。"
+  },
+  {
+    id: "review-ownership",
+    level: "中",
+    scene: ["digest", "meeting", "process"],
+    title: "责任人或下一步不清",
+    keywords: ["谁", "负责人", "对接人", "PM", "接口", "确认", "待定", "跟进", "下周", "月底"],
+    concern: "流程推进要落到责任人、时间点和下一步，否则日报只能描述现象，不能推动闭环。",
+    action: "补负责人、截止时间和需要谁确认；跨系统问题带单号、字段和异常现象同步支持同事。"
+  }
+];
+
 const sceneCards = document.querySelectorAll(".scene-card");
 const jumpButtons = document.querySelectorAll("[data-jump]");
 const panels = document.querySelectorAll(".panel");
@@ -69,6 +180,7 @@ function renderDigest() {
   const group = parsed.groupName || valueOf("digestGroup") || "当前群";
   const range = parsed.period || document.querySelector("#digestRange").value;
   const result = document.querySelector("#digestResult");
+  const analysis = analyzeWithSunbinSkill(`${command}\n${input}`, "digest");
 
   if (!command && !input) {
     result.innerHTML = emptyState("请输入需求指令，例如“总结 H55 报价群今天的沟通内容”，或粘贴群消息。");
@@ -80,10 +192,11 @@ function renderDigest() {
 
   const cards = [
     intentCard(parsed, group, range),
+    sunbinInsightCard(analysis),
     card(`${group} ${range}进展`, buildProgressItems(input, parsed)),
-    card("风险", buildRiskItems(input, parsed)),
-    card("待办", buildTodoItems(input, parsed)),
-    card("需要确认", buildQuestionItems(input, parsed))
+    card("风险", buildRiskItems(input, parsed, analysis)),
+    card("待办", buildTodoItems(input, parsed, analysis)),
+    card("需要确认", buildQuestionItems(input, parsed, analysis))
   ];
 
   result.innerHTML = cards.join("");
@@ -175,28 +288,25 @@ function buildProgressItems(input, parsed) {
   return ["群内已有明确进展信息，建议按事项归类到需求、报价、验收三个维度。", "当前切片可生成日报，接入真实 POPO 后可自动覆盖指定群和时间段。"];
 }
 
-function buildRiskItems(input, parsed) {
-  const risks = [];
-  if (/保密|PSD|截图/.test(input)) risks.push("涉及保密要求，验收材料不能包含 PSD 或制作内容。");
-  if (/暂停|调整/.test(input)) risks.push("部分需求暂停或内部调整，报价确认前需要先确认需求是否继续。");
-  if (/合同|营业执照|开户/.test(input)) risks.push("合同或供应商资质材料不完整，可能影响后续流程。");
-  return risks.length ? risks : ["未发现明确阻塞，但建议继续确认报价、排期和验收材料口径。"];
+function buildRiskItems(input, parsed, analysis = analyzeWithSunbinSkill(input + parsed.raw, "digest")) {
+  const risks = analysis.matches.slice(0, 4).map((item) => `${item.title}：${item.concern}`);
+  return risks.length ? risks : ["未发现明确阻塞；仍建议按报价、合同、APC、验收、结算五项做一次复核。"];
 }
 
-function buildTodoItems(input, parsed) {
-  const todos = [];
-  if (/报价|排期/.test(input + parsed.raw)) todos.push("确认报价排期和报价单是否为最终版本。");
-  if (/验收|截图|收稿/.test(input + parsed.raw)) todos.push("补充 POPO 群内项目组确认收稿截图。");
-  if (/合同|营业执照|开户/.test(input)) todos.push("补齐供应商营业执照、开户许可证等合同材料。");
-  return todos.length ? todos : ["按群消息继续补充负责人、截止时间和下一步动作。"];
+function buildTodoItems(input, parsed, analysis = analyzeWithSunbinSkill(input + parsed.raw, "digest")) {
+  const todos = analysis.matches.slice(0, 4).map((item) => item.action);
+  if (!todos.length && /报价|排期/.test(input + parsed.raw)) todos.push("确认报价排期和报价单是否为最终版本。");
+  if (!todos.length && /验收|截图|收稿/.test(input + parsed.raw)) todos.push("补充 POPO 群内项目组确认收稿截图。");
+  return todos.length ? todos : ["按群消息继续补充负责人、截止时间、单号和下一步动作。"];
 }
 
-function buildQuestionItems(input, parsed) {
+function buildQuestionItems(input, parsed, analysis = analyzeWithSunbinSkill(input + parsed.raw, "digest")) {
   const questions = ["本次总结是否只覆盖当前群，还是需要扩展到同类型群？"];
+  analysis.questions.slice(0, 4).forEach((question) => questions.push(question));
   if (/报价|排期/.test(input + parsed.raw)) questions.push("报价排期是否已最终确认？");
   if (/验收|截图/.test(input + parsed.raw)) questions.push("验收记录上传入口和截图标准是否统一？");
   if (/暂停|调整/.test(input)) questions.push("暂停需求是否需要撤回供应商报价动作？");
-  return questions;
+  return [...new Set(questions)].slice(0, 6);
 }
 
 function renderSupplier() {
@@ -206,15 +316,17 @@ function renderSupplier() {
     result.innerHTML = "请先粘贴供应商沟通记录。";
     return;
   }
+  const analysis = analyzeWithSunbinSkill(input, "supplier");
   result.innerHTML = `
+    ${sunbinInsightCard(analysis)}
     <table class="record-table">
       <tr><th>字段</th><th>整理结果</th></tr>
       <tr><td>供应商 / 群</td><td>供应商甲、供应商乙、供应商丙等报价相关群</td></tr>
       <tr><td>报价</td><td>多条消息涉及报价单、报价排期、排期报价修改</td></tr>
       <tr><td>交付时间</td><td>当前切片未出现明确日期，需要继续读取附件或上下文</td></tr>
       <tr><td>修改意见</td><td>有需求暂停、内部调整、报价需最终确认等信息</td></tr>
-      <tr><td>待补材料</td><td>报价附件、项目组确认截图、验收记录上传说明</td></tr>
-      <tr><td>下一步</td><td>逐群确认报价排期是否有效；对验收截图和保密要求形成统一口径</td></tr>
+      <tr><td>待补材料</td><td>${analysis.archiveItems.join("、")}</td></tr>
+      <tr><td>下一步</td><td>${analysis.nextActions.slice(0, 3).join("；")}</td></tr>
     </table>
   `;
 }
@@ -242,11 +354,10 @@ function renderProcess() {
     result.innerHTML = emptyState("请先粘贴包含流程关键词的群聊内容。");
     return;
   }
+  const analysis = analyzeWithSunbinSkill(input, "process");
   result.innerHTML = [
-    card("报价确认", ["检测到关键词：报价、报价单、报价排期。", "建议准备：报价单附件、需求范围、排期、最终确认人。"]),
-    card("需求变更", ["检测到关键词：需求暂停、内部调整。", "建议确认：是否暂停报价、是否通知供应商、是否保留当前排期。"]),
-    card("验收", ["检测到关键词：验收、POPO 验收记录、确认收稿截图。", "建议准备：项目组确认收稿截图，且截图不要带制作内容。"]),
-    card("保密", ["检测到关键词：保密等级高、不要交 PSD。", "建议提醒：验收材料只提交允许范围内的截图或记录。"])
+    sunbinInsightCard(analysis),
+    ...analysis.matches.slice(0, 5).map((item) => card(item.title, [`风险等级：${item.level}`, item.concern, item.action]))
   ].join("");
 }
 
@@ -257,7 +368,9 @@ function renderArchive() {
     result.innerHTML = "请先粘贴 @机器人 和附件信息。";
     return;
   }
+  const analysis = analyzeWithSunbinSkill(input, "archive");
   result.innerHTML = `
+    ${sunbinInsightCard(analysis)}
     <strong>归档检查清单</strong>
     <ul class="check-list">
       <li class="done">已检测：报价单.xlsx</li>
@@ -286,4 +399,96 @@ function card(title, items) {
 
 function emptyState(text) {
   return `<div class="answer-box">${text}</div>`;
+}
+
+function analyzeWithSunbinSkill(text, scene) {
+  const source = normalizeText(text);
+  const matches = sunbinRiskRules
+    .filter((rule) => rule.scene.includes(scene))
+    .map((rule) => ({ ...rule, score: scoreRule(rule, source) }))
+    .filter((rule) => rule.score > 0)
+    .sort((a, b) => levelWeight(b.level) - levelWeight(a.level) || b.score - a.score);
+
+  const fallback = [
+    "报价表是否能被不熟项目的审核同学独立复核？",
+    "合同、APC/OA、供应商资质和结算材料是否已齐？",
+    "是否已明确负责人、截止时间、单号和下一步？"
+  ];
+
+  const questions = matches.length
+    ? matches.map((item) => questionForRule(item)).filter(Boolean)
+    : fallback;
+
+  const nextActions = matches.length
+    ? [...new Set(matches.map((item) => item.action))]
+    : ["先按报价、合同、APC、验收、结算五项做基础复核。"];
+
+  return {
+    matches,
+    questions: [...new Set(questions)],
+    nextActions,
+    archiveItems: buildArchiveItems(source, matches)
+  };
+}
+
+function normalizeText(text) {
+  return (text || "").toLowerCase();
+}
+
+function scoreRule(rule, text) {
+  return rule.keywords.reduce((score, keyword) => {
+    return text.includes(keyword.toLowerCase()) ? score + 1 : score;
+  }, 0);
+}
+
+function levelWeight(level) {
+  if (level === "高") return 3;
+  if (level === "中") return 2;
+  return 1;
+}
+
+function questionForRule(rule) {
+  const questions = {
+    "quote-reviewable": "报价表是否已有需求名、资源、数量、环节、人天、合计和对应单号？",
+    "reuse-model": "复用模型、白模或 AI 模型是否真的减少工作量，复用比例由谁确认？",
+    "change-supplement": "这次变更是原单修改、增补、新开单，还是需要把取消项改零？",
+    "arcolab-apc-split": "APC 单、ArcoLab 任务、人天合计和报价表是否完全一致？",
+    "contract-validity": "当前是否有有效合同，主体、额度、签署状态和资质材料是否齐全？",
+    "settlement-quality": "结算金额、人天、质量扣款比例和操作日志是否能相互对上？",
+    "acceptance-confidential": "验收截图是否既能证明收稿，又不暴露高保或制作内容？",
+    "dispatch-before-order": "外派或驻场是否已先完成制作内容确认、开单和供应商报价？",
+    "guide-price": "单价是否超过指导价，职级、PM、入场时间和特批原因是否已补齐？",
+    "supplier-compliance": "供应商准入、委派函、NDA、银行信息和账号权限是否已齐？",
+    "price-private-chat": "议价和最终确认是否已回到采购可追溯的群或记录中？",
+    "review-ownership": "负责人、确认人、截止时间和单号是否已明确？"
+  };
+  return questions[rule.id];
+}
+
+function buildArchiveItems(text, matches) {
+  const items = ["报价表", "合同或有效签署记录", "验收确认截图"];
+  if (/营业执照|开户|供应商|银行/.test(text)) items.push("供应商资质和银行信息");
+  if (/apc|arcolab|muse|qc/i.test(text)) items.push("APC / ArcoLab / Muse 对照关系");
+  if (matches.some((item) => item.id === "settlement-quality")) items.push("结算金额、人天和扣款依据");
+  return [...new Set(items)];
+}
+
+function sunbinInsightCard(analysis) {
+  const topMatches = analysis.matches.slice(0, 4);
+  const body = topMatches.length
+    ? topMatches.map((item) => `
+        <li>
+          <span class="risk-pill level-${item.level === "高" ? "high" : "mid"}">${item.level}风险</span>
+          <strong>${item.title}</strong>
+          <p>${item.concern}</p>
+        </li>
+      `).join("")
+    : `<li><strong>未命中强风险</strong><p>仍按孙斌采购 BP 口径检查报价、合同、APC、验收、结算和责任人。</p></li>`;
+
+  return `
+    <div class="result-card sunbin-card">
+      <h3>孙斌采购 BP 风险识别</h3>
+      <ul class="risk-list">${body}</ul>
+    </div>
+  `;
 }
