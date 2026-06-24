@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>POPO AI</title>
+    <title>POPO 助手</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -13,19 +13,19 @@
         <div class="brand">
           <div class="brand-mark">P</div>
           <div>
-            <strong>POPO AI</strong>
-            <span>群聊工作流助手</span>
+            <strong>POPO 助手</strong>
+            <span>群聊业务助手</span>
           </div>
         </div>
         <label class="search-box">
           <span>搜索</span>
-          <input type="search" placeholder="搜索群、供应商、流程或归档材料" />
+          <input type="search" placeholder="搜索群、供应商、待办或 POPO 文件" />
         </label>
         <div class="nav-tools" aria-label="快捷入口">
-          <button title="日报">报</button>
-          <button title="流程">流</button>
-          <button title="归档">档</button>
-          <button title="提醒">醒</button>
+          <button title="日报周报">报</button>
+          <button title="报价检查">价</button>
+          <button title="待办提醒">办</button>
+          <button title="文件调取">文</button>
         </div>
       </header>
 
@@ -70,22 +70,22 @@
             <article class="suggestion-item">
               <button data-jump="digest">加入</button>
               <div>
-                <strong>H55 报价群日报</strong>
-                <span>12 条待整理</span>
+                <strong>日报周报审核</strong>
+                <span>12 条待收集</span>
               </div>
             </article>
             <article class="suggestion-item">
               <button data-jump="supplier">加入</button>
               <div>
-                <strong>供应商摘要</strong>
+                <strong>供应商报价 Check</strong>
                 <span>4 个报价群命中</span>
               </div>
             </article>
             <article class="suggestion-item">
-              <button data-jump="process">加入</button>
+              <button data-jump="meeting">加入</button>
               <div>
-                <strong>验收流程提醒</strong>
-                <span>保密材料需确认</span>
+                <strong>待办事项提醒</strong>
+                <span>3 个事项待确认</span>
               </div>
             </article>
           </section>
@@ -99,8 +99,8 @@
               <button title="电话">☎</button>
             </div>
             <div class="chat-title">
-              <strong id="activeTitle">群消息日报 / 周报</strong>
-              <span id="activeSubtitle">融合采购 BP 风险规则，整理进展、风险、待办和确认项</span>
+              <strong id="activeTitle">日报 / 周报收集生成审核</strong>
+              <span id="activeSubtitle">收集群消息，生成日报周报，并审核风险、待办和确认项</span>
             </div>
             <div class="agent-card">
               <div class="avatar red">AI</div>
@@ -108,7 +108,7 @@
             </div>
           </div>
 
-          <div class="panel active" id="panel-digest" data-title="群消息日报 / 周报" data-subtitle="融合采购 BP 风险规则，整理进展、风险、待办和确认项">
+          <div class="panel active" id="panel-digest" data-title="日报 / 周报收集生成审核" data-subtitle="收集群消息，生成日报周报，并审核风险、待办和确认项">
             <div class="message-stack">
               <article class="bubble bot">
                 <span>09:25 POPO 助手</span>
@@ -152,83 +152,62 @@
             <div class="result-grid" id="digestResult"></div>
           </div>
 
-          <div class="panel" id="panel-supplier" data-title="供应商沟通摘要" data-subtitle="报价、排期、修改意见和待补材料结构化">
+          <div class="panel" id="panel-supplier" data-title="供应商报价 Check" data-subtitle="检查报价、人天、排期、材料和采购风险">
             <div class="message-stack">
               <article class="bubble bot">
                 <span>09:28 POPO 助手</span>
-                <p>适合把供应商群里的报价、交付时间、修改意见和缺失材料整理成可归档记录。</p>
+                <p>粘贴供应商报价沟通后，我会检查报价表、人天、排期、材料完整性和采购风险。</p>
               </article>
             </div>
             <div class="input-dock">
               <article class="bubble user wide">
-                <textarea id="supplierInput" placeholder="粘贴供应商沟通记录，或载入 POPO 切片"></textarea>
+                <textarea id="supplierInput" placeholder="粘贴供应商报价、排期、人天或报价表沟通记录"></textarea>
               </article>
               <div class="composer">
                 <button class="send-button" data-action="supplier">整理</button>
                 <button class="tool-button sample" data-target="supplierInput">示例</button>
                 <button class="tool-button" data-load-slice="supplierInput">POPO 切片</button>
-                <span>结构化供应商记录</span>
+                <span>供应商报价检查</span>
               </div>
             </div>
             <div class="answer-box" id="supplierResult"></div>
           </div>
 
-          <div class="panel" id="panel-meeting" data-title="会议后行动项" data-subtitle="从纪要或群讨论提取负责人、截止时间和下一步">
+          <div class="panel" id="panel-meeting" data-title="待办事项提醒" data-subtitle="从群讨论中提取负责人、截止时间、下一步和提醒项">
             <div class="message-stack">
               <article class="bubble bot">
                 <span>09:31 POPO 助手</span>
-                <p>粘贴会议纪要后，我会拆出明确行动项、负责人、截止时间和悬而未决的问题。</p>
+                <p>粘贴群讨论或会议纪要后，我会拆出待办事项、负责人、截止时间和需要提醒的问题。</p>
               </article>
             </div>
             <div class="input-dock">
               <article class="bubble user wide">
-                <textarea id="meetingInput" placeholder="粘贴会议纪要或群讨论"></textarea>
+                <textarea id="meetingInput" placeholder="粘贴群讨论、会议纪要或需要跟进的事项"></textarea>
               </article>
               <div class="composer">
                 <button class="send-button" data-action="meeting">提取</button>
                 <button class="tool-button sample" data-target="meetingInput">示例</button>
-                <span>会议行动项</span>
+                <span>待办提醒</span>
               </div>
             </div>
             <div class="task-table" id="meetingResult"></div>
           </div>
 
-          <div class="panel" id="panel-process" data-title="流程提醒" data-subtitle="识别合同、立项、结算、验收等流程材料">
-            <div class="message-stack">
-              <article class="bubble bot">
-                <span>09:33 POPO 助手</span>
-                <p>我会根据关键词识别流程阶段，并提示报价、合同、验收、结算需要准备的材料。</p>
-              </article>
-            </div>
-            <div class="input-dock">
-              <article class="bubble user wide">
-                <textarea id="processInput" placeholder="粘贴群聊内容，自动识别流程关键词"></textarea>
-              </article>
-              <div class="composer">
-                <button class="send-button" data-action="process">识别</button>
-                <button class="tool-button sample" data-target="processInput">示例</button>
-                <button class="tool-button" data-load-slice="processInput">POPO 切片</button>
-                <span>流程提醒</span>
-              </div>
-            </div>
-            <div class="result-grid" id="processResult"></div>
-          </div>
-
-          <div class="panel" id="panel-archive" data-title="文件归档入口" data-subtitle="群内 @机器人 + 附件生成归档检查清单">
+          <div class="panel" id="panel-archive" data-title="POPO 文件调取" data-subtitle="根据群聊、关键词或附件线索调取并检查 POPO 文件">
             <div class="message-stack">
               <article class="bubble bot">
                 <span>09:35 POPO 助手</span>
-                <p>模拟群内 @POPO AI 和附件信息，生成报价、合同、验收、资质材料的检查清单。</p>
+                <p>输入群聊线索、文件名或 @POPO 助手，我会整理需要调取的 POPO 文件和缺失材料。</p>
               </article>
             </div>
             <div class="input-dock">
               <article class="bubble user wide">
-                <textarea id="archiveInput" placeholder="@POPO AI 请归档这批角色原画验收材料，附件：报价单、合同、验收图"></textarea>
+                <textarea id="archiveInput" placeholder="@POPO 助手 调取这批角色原画的报价单、合同、验收图和供应商材料"></textarea>
               </article>
               <div class="composer">
-                <button class="send-button" data-action="archive">检查</button>
+                <button class="send-button" data-action="archive">调取</button>
                 <button class="tool-button sample" data-target="archiveInput">示例</button>
-                <span>归档检查清单</span>
+                <span>POPO 文件调取</span>
               </div>
             </div>
             <div class="answer-box" id="archiveResult"></div>
@@ -249,31 +228,26 @@
             <label class="small-search">
               <input type="search" placeholder="搜索" />
             </label>
-            <nav class="scene-list" aria-label="POPO AI 场景">
+            <nav class="scene-list" aria-label="POPO 助手模块">
               <button class="scene-card active" data-panel="digest">
                 <span>09:00</span>
-                <strong>群消息日报 / 周报</strong>
-                <small>进展、风险、待办、确认项</small>
+                <strong>日报 / 周报收集生成审核</strong>
+                <small>收集、生成、风险审核</small>
               </button>
               <button class="scene-card" data-panel="supplier">
                 <span>10:00</span>
-                <strong>供应商沟通摘要</strong>
-                <small>报价、排期、修改意见</small>
+                <strong>供应商报价 Check</strong>
+                <small>报价、人天、排期、材料</small>
               </button>
               <button class="scene-card" data-panel="meeting">
                 <span>11:00</span>
-                <strong>会议后行动项</strong>
-                <small>负责人、截止时间、下一步</small>
-              </button>
-              <button class="scene-card" data-panel="process">
-                <span>14:00</span>
-                <strong>流程提醒</strong>
-                <small>合同、立项、结算、验收</small>
+                <strong>待办事项提醒</strong>
+                <small>负责人、截止时间、提醒</small>
               </button>
               <button class="scene-card" data-panel="archive">
-                <span>16:00</span>
-                <strong>文件归档入口</strong>
-                <small>@机器人 + 附件清单</small>
+                <span>14:00</span>
+                <strong>POPO 文件调取</strong>
+                <small>文件名、群线索、附件</small>
               </button>
             </nav>
           </section>

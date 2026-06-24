@@ -1,15 +1,15 @@
 const samples = {
-  digestCommand: "总结 H55 报价群今天的沟通内容，提取进展、风险、待办和需要确认的问题",
+  digestCommand: "收集 H55 报价群今天的沟通内容，生成日报并审核进展、风险、待办和需要确认的问题",
   digestInput:
     "张三：H55 本周外包角色立绘完成 6 张，剩余 2 张等主美确认。\n李四：供应商 A 报价已回，单张 1800，周五可交初稿。\n王五：合同还缺对方营业执照和开户许可证。\n赵六：昨天提交的 3 张图有两处需要改，肩甲比例和配色要收敛。",
   supplierInput:
     "供应商 A：角色立绘单张 1800，8 张一起做可到 1650。初稿本周五，终稿下周三。需要补角色设定、参考图和验收标准。主美反馈肩甲比例偏大，配色要更接近阵营色。",
   meetingInput:
-    "会议结论：第一期先接 H55 美术报价群。张三本周五前完成原型，李四下周三前整理 POPO 消息接口，王五月底前确认归档字段。风险是 Muse 和 ArcoLab 的字段映射还没定。",
+    "群讨论：H55 报价日报先接入今天的报价群。张三本周五前补齐生成模板，李四下周三前整理 POPO 消息接口，王五月底前确认文件调取字段。风险是 Muse 和 ArcoLab 的字段映射还没定。",
   processInput:
     "这个供应商报价可以走了，先立项，合同模板我晚点发。验收图主美已确认，结算时需要报价单、合同、验收确认和发票信息。",
   archiveInput:
-    "@POPO AI 请归档 H55 角色立绘第 3 批材料。附件：报价单.xlsx、合同扫描.pdf、验收图.zip。缺供应商营业执照和最终验收确认截图，后续可能要同步 Muse / ArcoLab。"
+    "@POPO 助手 请调取 H55 角色立绘第 3 批材料。需要报价单.xlsx、合同扫描.pdf、验收图.zip。缺供应商营业执照和最终验收确认截图，后续可能要同步 Muse / ArcoLab。"
 };
 
 const sunbinRiskRules = [
@@ -183,7 +183,7 @@ function renderDigest() {
   const analysis = analyzeWithSunbinSkill(`${command}\n${input}`, "digest");
 
   if (!command && !input) {
-    result.innerHTML = emptyState("请输入需求指令，例如“总结 H55 报价群今天的沟通内容”，或粘贴群消息。");
+    result.innerHTML = emptyState("请输入需求指令，例如“收集 H55 报价群今天的沟通内容并生成日报”，或粘贴群消息。");
     return;
   }
 
@@ -215,7 +215,7 @@ function parseDigestCommand(command) {
     groupType,
     period,
     focuses,
-    intent: text.includes("周报") ? "生成周报" : "生成日报",
+    intent: text.includes("周报") ? "收集生成周报" : "收集生成日报",
     dataScope: groupName ? "指定群" : groupType ? "群类型" : "当前群"
   };
 }
@@ -276,16 +276,16 @@ function intentCard(parsed, group, range) {
     <div class="result-card intent-card">
       <h3>已理解你的需求</h3>
       <div class="chip-row">${chips.map((chip) => `<span>${chip}</span>`).join("")}</div>
-      <p>后续接入真实 POPO 时，会先解析群名或群类型，再按权限拉取对应时间范围内的群消息，最后生成结构化日报或周报。</p>
+      <p>后续接入真实 POPO 时，会先解析群名或群类型，再按权限拉取对应时间范围内的群消息，生成日报或周报后进入风险审核。</p>
     </div>
   `;
 }
 
 function buildProgressItems(input, parsed) {
   if (/报价|报价单|排期/.test(input + parsed.raw)) {
-    return ["报价单、报价排期或报价修改正在等待确认。", "部分供应商已反馈排期，适合进入确认或回写流程。"];
+    return ["报价单、报价排期或报价修改正在等待确认。", "部分供应商已反馈排期，适合进入日报/周报并触发审核。"];
   }
-  return ["群内已有明确进展信息，建议按事项归类到需求、报价、验收三个维度。", "当前切片可生成日报，接入真实 POPO 后可自动覆盖指定群和时间段。"];
+  return ["群内已有明确进展信息，建议按事项归类到需求、报价、验收三个维度。", "当前切片可生成日报或周报，接入真实 POPO 后可自动覆盖指定群和时间段。"];
 }
 
 function buildRiskItems(input, parsed, analysis = analyzeWithSunbinSkill(input + parsed.raw, "digest")) {
@@ -335,14 +335,14 @@ function renderMeeting() {
   const input = valueOf("meetingInput");
   const result = document.querySelector("#meetingResult");
   if (!input) {
-    result.innerHTML = emptyState("请先粘贴会议纪要或群讨论。");
+    result.innerHTML = emptyState("请先粘贴群讨论、会议纪要或需要跟进的事项。");
     return;
   }
   result.innerHTML = `
-    <div class="task-row"><strong>下一步动作</strong><strong>负责人</strong><strong>截止时间</strong></div>
-    <div class="task-row"><span>完成 POPO AI 原型</span><span>张三</span><span class="tag">本周五</span></div>
+    <div class="task-row"><strong>待办事项</strong><strong>负责人</strong><strong>提醒时间</strong></div>
+    <div class="task-row"><span>补齐日报生成模板</span><span>张三</span><span class="tag">本周五</span></div>
     <div class="task-row"><span>整理 POPO 消息接口</span><span>李四</span><span class="tag">下周三</span></div>
-    <div class="task-row"><span>确认归档字段</span><span>王五</span><span class="tag">月底前</span></div>
+    <div class="task-row"><span>确认 POPO 文件调取字段</span><span>王五</span><span class="tag">月底前</span></div>
     <div class="task-row"><span>梳理 Muse / ArcoLab 字段映射</span><span>待定</span><span class="tag warn">需确认</span></div>
   `;
 }
@@ -365,13 +365,13 @@ function renderArchive() {
   const input = valueOf("archiveInput");
   const result = document.querySelector("#archiveResult");
   if (!input) {
-    result.innerHTML = "请先粘贴 @机器人 和附件信息。";
+    result.innerHTML = "请先粘贴文件名、群聊线索、@POPO 助手内容或附件信息。";
     return;
   }
   const analysis = analyzeWithSunbinSkill(input, "archive");
   result.innerHTML = `
     ${sunbinInsightCard(analysis)}
-    <strong>归档检查清单</strong>
+    <strong>POPO 文件调取清单</strong>
     <ul class="check-list">
       <li class="done">已检测：报价单.xlsx</li>
       <li class="done">已检测：合同扫描.pdf</li>
@@ -379,7 +379,7 @@ function renderArchive() {
       <li class="missing">缺失：供应商营业执照</li>
       <li class="missing">缺失：最终验收确认截图</li>
     </ul>
-    <p class="next-step">建议动作：先补齐缺失材料；材料完整后可生成 Muse / ArcoLab 同步任务。</p>
+    <p class="next-step">建议动作：先按文件名、群名和附件线索调取 POPO 文件；材料完整后可生成 Muse / ArcoLab 同步任务。</p>
   `;
 }
 
