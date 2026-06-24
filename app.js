@@ -74,7 +74,7 @@ async function refreshAll() {
     renderClusters();
     keepSelection();
   } catch {
-    updateOffline();
+    useDemoData();
   }
 }
 
@@ -98,9 +98,11 @@ function connectEvents() {
       if (data.type === "sync") await refreshAll();
       if (data.type === "error") elements.syncStatus.textContent = "同步异常";
     };
-    events.onerror = () => updateOffline();
+    events.onerror = () => {
+      if (!state.clusters.length) useDemoData();
+    };
   } catch {
-    updateOffline();
+    if (!state.clusters.length) useDemoData();
   }
 }
 
@@ -118,6 +120,97 @@ function updateOffline() {
   elements.syncMessageCount.textContent = "-";
   elements.syncAlertCount.textContent = "-";
   elements.clusterList.innerHTML = `<div class="empty-state">本地同步服务未连接。请在项目目录运行：<code>npm run server</code></div>`;
+}
+
+function useDemoData() {
+  const now = Date.now();
+  const messages = [
+    demoMessage("demo-1", now - 8 * 60 * 1000, "成都益格PM江浩", "H55-动作-益格-报价群", "这是套用修改3端动画1人天，3个loop调整位置参考之前的0.15，一起1.45吧 [图片] 这个有点高，是单独出了pose，一个加0.2吧 @孙斌"),
+    demoMessage("demo-2", now - 35 * 60 * 1000, "赵佑福", "H55-动作-益格-报价群", "我找对接同学和对对"),
+    demoMessage("demo-3", now - 48 * 60 * 1000, "成都益格PM江浩", "H55-动作-益格-报价群", "好滴", "P4", "低价值确认类消息，默认静默"),
+    demoMessage("demo-4", now - 66 * 60 * 1000, "上海点晴|刘瑶颖|PM", "H55-场景制作-点晴-报价群", "基本制作都会用到引擎，我们都是用离线版本，数量在10个左右", "P2", "项目或业务相关，可进入摘要")
+  ];
+  state.health = {
+    messageCount: messages.length,
+    alertCount: 2,
+    queueCounts: { pending: 1, mentions: 1, direct: 0, project: 4, business: 1, digest: 2, muted: 1 }
+  };
+  state.queues = {
+    pending: [messages[0]],
+    mentions: [messages[0]],
+    direct: [],
+    project: messages,
+    business: [messages[0]],
+    digest: [messages[1], messages[3]],
+    muted: [messages[2]]
+  };
+  state.clusters = [
+    {
+      id: "demo:quote",
+      title: "H55-动作-益格-报价群",
+      sourceType: "group",
+      groupName: "H55-动作-益格-报价群",
+      topic: "报价",
+      priority: "P0",
+      priorityReason: "群内 @你，需要优先处理",
+      messageCount: 3,
+      mentionsMe: true,
+      businessTags: ["报价", "文件"],
+      projectTags: ["H55", "动作"],
+      latestAt: messages[0].t_msg,
+      summary: "群内 @你，需要确认人天报价口径和截图材料。",
+      suggestedActions: ["确认是否需要你回复或推进。", "核对报价表中的资源、数量、环节、人天、合计和截图。", "确认是否存在人天差异、增补或口径变更。"],
+      messages: [messages[0], messages[1], messages[2]]
+    },
+    {
+      id: "demo:engine",
+      title: "H55-场景制作-点晴-报价群",
+      sourceType: "group",
+      groupName: "H55-场景制作-点晴-报价群",
+      topic: "H55",
+      priority: "P2",
+      priorityReason: "项目或业务相关，可进入摘要",
+      messageCount: 1,
+      mentionsMe: false,
+      businessTags: [],
+      projectTags: ["H55", "场景"],
+      latestAt: messages[3].t_msg,
+      summary: "供应商反馈制作同学使用引擎数量，适合进入日报摘要。",
+      suggestedActions: ["保留上下文，进入日/周报摘要即可。"],
+      messages: [messages[3]]
+    }
+  ];
+  state.alerts = [{
+    msg_id: "demo-1",
+    level: "高",
+    title: "报价材料需要复核",
+    content: messages[0].content
+  }];
+  elements.serviceMini.classList.add("offline");
+  elements.syncStatus.textContent = "演示数据";
+  elements.syncMessageCount.textContent = state.health.messageCount;
+  elements.syncAlertCount.textContent = state.health.alertCount;
+  renderQueues();
+  renderClusters();
+}
+
+function demoMessage(msgId, tMsg, sender, groupName, content, priority = "P0", priorityReason = "群内 @你，需要优先处理") {
+  return {
+    msg_id: msgId,
+    t_msg: tMsg,
+    time: new Date(tMsg).toISOString(),
+    sender,
+    sender_uid: sender,
+    group_id: groupName,
+    group_name: groupName,
+    sourceType: "group",
+    content,
+    priority,
+    priorityReason,
+    mentionsMe: content.includes("@孙斌"),
+    businessTags: content.includes("人天") ? ["报价"] : [],
+    projectTags: ["H55"]
+  };
 }
 
 function renderQueues() {
