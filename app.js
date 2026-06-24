@@ -5,7 +5,9 @@ const state = {
   alerts: [],
   activeFeed: "all",
   selectedMessageId: "",
-  search: ""
+  search: "",
+  collapsedGroups: new Set(),
+  manualAnalysis: new Set()
 };
 
 const elements = {
@@ -101,7 +103,7 @@ function updateHealth(health) {
   elements.serviceMini.classList.remove("offline");
   elements.syncStatus.textContent = health.lastSyncAt ? `已连接 ${formatTime(health.lastSyncAt)}` : "已连接";
   elements.syncMessageCount.textContent = health.messageCount;
-  elements.syncAlertCount.textContent = health.alertCount;
+  elements.syncAlertCount.textContent = actionableAlertCount();
 }
 
 function updateOffline() {
@@ -140,9 +142,12 @@ function renderMessages() {
     return;
   }
 
-  elements.messageFeed.innerHTML = messages.map(messageCard).join("");
+  elements.messageFeed.innerHTML = groupedMessageSections(messages);
   elements.messageFeed.querySelectorAll("[data-message-id]").forEach((card) => {
     card.addEventListener("click", () => selectMessage(card.dataset.messageId));
+  });
+  elements.messageFeed.querySelectorAll("[data-group-key]").forEach((button) => {
+    button.addEventListener("click", () => toggleGroup(button.dataset.groupKey));
   });
 
   if (!state.selectedMessageId || !messages.some((message) => message.msg_id === state.selectedMessageId)) {
@@ -163,21 +168,68 @@ function filteredMessages() {
     });
 }
 
+function groupedMessageSections(messages) {
+  const groups = groupMessages(messages);
+  return groups.map((group, index) => {
+    const key = group.key;
+    if (index === 0 && !state.collapsedGroups.has(key) && !state.selectedMessageId) {
+      state.collapsedGroups.delete(key);
+    }
+    const collapsed = state.collapsedGroups.has(key);
+    const mentionCount = group.items.filter(isMention).length;
+    const alertCount = group.items.reduce((count, message) => count + visibleAlertsForMessage(message).length, 0);
+    return `
+      <section class="message-group">
+        <button class="group-header" type="button" data-group-key="${escapeHtml(key)}">
+          <div>
+            <strong>${escapeHtml(group.title)}</strong>
+            <span>${group.items.length} 条消息${mentionCount ? ` · ${mentionCount} 条 @我` : ""}${alertCount ? ` · ${alertCount} 条建议` : ""}</span>
+          </div>
+          <span>${collapsed ? "展开" : "收起"}</span>
+        </button>
+        ${collapsed ? "" : `<div class="group-messages">${group.items.map(messageCard).join("")}</div>`}
+      </section>
+    `;
+  }).join("");
+}
+
+function groupMessages(messages) {
+  const map = new Map();
+  messages.forEach((message) => {
+    const type = classifyMessage(message);
+    const key = type === "direct" ? `direct:${message.sender_uid || message.sender}` : `group:${message.group_id || message.group_name}`;
+    const title = type === "direct" ? `私聊 · ${message.sender || "未知联系人"}` : message.group_name || "未知群聊";
+    if (!map.has(key)) map.set(key, { key, title, items: [] });
+    map.get(key).items.push(message);
+  });
+  return [...map.values()];
+}
+
+function toggleGroup(key) {
+  if (state.collapsedGroups.has(key)) {
+    state.collapsedGroups.delete(key);
+  } else {
+    state.collapsedGroups.add(key);
+  }
+  renderMessages();
+}
+
 function messageCard(message) {
-  const alerts = alertsForMessage(message);
+  const alerts = visibleAlertsForMessage(message);
   const feed = isMention(message) ? "@我" : classifyMessage(message) === "direct" ? "私聊" : "群聊";
   const active = message.msg_id === state.selectedMessageId ? " active" : "";
+  const summary = alerts.length ? `<strong>${alerts.length} 条建议</strong>` : `<span>${shouldAnalyzeMessage(message) ? "无强提醒" : "未分析"}</span>`;
   return `
     <article class="message-card${active}" data-message-id="${escapeHtml(message.msg_id)}">
       <div class="message-card-top">
         <span class="feed-pill">${feed}</span>
         <time>${formatTime(message.t_msg)}</time>
       </div>
-      <h3>${escapeHtml(message.group_name || "未知会话")}</h3>
+      <h3>${escapeHtml(classifyMessage(message) === "direct" ? message.sender : message.group_name || "未知群聊")}</h3>
       <p>${escapeHtml(message.content)}</p>
       <div class="message-meta">
         <span>${escapeHtml(message.sender || "未知成员")}</span>
-        ${alerts.length ? `<strong>${alerts.length} 条建议</strong>` : "<span>无强提醒</span>"}
+        ${summary}
       </div>
     </article>
   `;
@@ -192,15 +244,24 @@ function selectMessage(messageId) {
   const message = state.messages.find((item) => item.msg_id === messageId);
   if (!message) return clearSelection();
 
-  const alerts = alertsForMessage(message);
+  const alerts = visibleAlertsForMessage(message);
+  const canAnalyze = !shouldAnalyzeMessage(message);
   elements.selectedHint.textContent = `${message.group_name} / ${message.sender}`;
   elements.selectedMessage.innerHTML = `
     <span>${formatTime(message.t_msg)} · ${escapeHtml(message.sender)}</span>
     <h3>${escapeHtml(message.group_name)}</h3>
-    <p>${escapeHtml(message.content)}</p>
+    <div class="rich-message">${renderRichContent(message.content)}</div>
+    ${canAnalyze ? `<button class="outline-button analyze-button" type="button" id="analyzeSelectedButton">分析这条消息</button>` : ""}
   `;
+  document.querySelector("#analyzeSelectedButton")?.addEventListener("click", () => {
+    state.manualAnalysis.add(message.msg_id);
+    selectMessage(message.msg_id);
+    renderMessages();
+  });
 
-  elements.riskList.innerHTML = alerts.length
+  elements.riskList.innerHTML = canAnalyze
+    ? `<p class="muted">这是一条未 @ 你的群聊消息，默认只展示不分析。需要处理时点击上方“分析这条消息”。</p>`
+    : alerts.length
     ? alerts.map((alert) => `
         <article class="risk-row">
           <span class="${alert.level === "高" ? "level-high" : "level-mid"}">${alert.level}</span>
@@ -212,11 +273,13 @@ function selectMessage(messageId) {
       `).join("")
     : `<p class="muted">未命中强风险，建议只做普通关注。</p>`;
 
-  elements.todoList.innerHTML = alerts.length
+  elements.todoList.innerHTML = canAnalyze
+    ? `<p class="todo-item">默认不生成待办，避免普通群消息干扰工作流。</p>`
+    : alerts.length
     ? [...new Set(alerts.map((alert) => alert.suggestion))].map((todo) => `<p class="todo-item">${escapeHtml(todo)}</p>`).join("")
     : `<p class="todo-item">无需立即处理，保留在消息流中观察。</p>`;
 
-  elements.replyDraft.value = buildReplyDraft(message, alerts);
+  elements.replyDraft.value = canAnalyze ? "" : buildReplyDraft(message, alerts);
 }
 
 function clearSelection() {
@@ -261,6 +324,18 @@ function alertsForMessage(message) {
   return state.alerts.filter((alert) => alert.msg_id === message.msg_id);
 }
 
+function visibleAlertsForMessage(message) {
+  return shouldAnalyzeMessage(message) ? alertsForMessage(message) : [];
+}
+
+function actionableAlertCount() {
+  return state.messages.reduce((total, message) => total + visibleAlertsForMessage(message).length, 0);
+}
+
+function shouldAnalyzeMessage(message) {
+  return classifyMessage(message) === "direct" || isMention(message) || state.manualAnalysis.has(message.msg_id);
+}
+
 function classifyMessage(message) {
   if (message.sessionType === 1 || !message.group_id) return "direct";
   return "group";
@@ -274,6 +349,28 @@ function buildReplyDraft(message, alerts) {
   if (!alerts.length) return "收到，我先关注下，有需要我再跟进。";
   const suggestions = [...new Set(alerts.map((alert) => alert.suggestion))];
   return `好滴，我先确认下。\n${suggestions.map((item) => `- ${item}`).join("\n")}\n确认后我同步最终口径。`;
+}
+
+function renderRichContent(content) {
+  const text = escapeHtml(content || "");
+  const urls = extractMediaUrls(content || "");
+  const withoutUrls = text.replace(/\[?https?:\/\/[^\]\s]+]?/g, "").trim();
+  const imageHtml = urls.length
+    ? `<div class="image-strip">${urls.map((url) => `
+        <a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">
+          <img src="${escapeHtml(url)}" alt="POPO 图片预览" loading="lazy" />
+        </a>
+      `).join("")}</div>`
+    : "";
+  const placeholder = /\[图片\]/.test(content || "") && !urls.length
+    ? `<div class="image-placeholder">图片占位：当前 POPO 搜索结果只返回 [图片]，需要后端接入附件下载接口后才能展示原图。</div>`
+    : "";
+  return `<p>${withoutUrls || text}</p>${imageHtml}${placeholder}`;
+}
+
+function extractMediaUrls(content) {
+  const matches = String(content || "").match(/https?:\/\/[^\]\s]+/g) || [];
+  return [...new Set(matches.filter((url) => /popofp|popo\.fp|vipfp/.test(url)))];
 }
 
 async function fetchJson(url, options) {
