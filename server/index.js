@@ -17,6 +17,19 @@ let isSyncing = false;
 let lastSyncError = "";
 let lastSyncAt = state.lastSyncAt || null;
 
+const mentionAliases = ["@孙斌", "@sunbin", "@sunbin05", "@我"];
+const projectKeywords = ["H55", "H74", "Joker", "角色", "动作", "场景", "美术", "外包", "报价群"];
+const noisePatterns = ["好的", "好滴", "收到", "ok", "OK", "嗯嗯", "辛苦", "看下", "我们看下"];
+
+const businessTagRules = [
+  { tag: "报价", keywords: ["报价", "报价单", "报价表", "人天", "单价", "合计", "增补", "差异"] },
+  { tag: "合同", keywords: ["合同", "电子签", "签署", "营业执照", "开户", "主体"] },
+  { tag: "结算", keywords: ["结算", "结款", "发票", "扣款", "金额", "验收比例"] },
+  { tag: "文件", keywords: ["文件", "图片", "截图", "附件", "上传", "资源"] },
+  { tag: "流程", keywords: ["APC", "ArcoLab", "Muse", "QC", "任务", "单号", "OA"] },
+  { tag: "排期", keywords: ["排期", "节点", "开始时间", "延期", "往前赶", "下周", "周五"] }
+];
+
 const riskRules = [
   {
     level: "高",
@@ -27,7 +40,7 @@ const riskRules = [
   {
     level: "高",
     title: "人天或报价口径存在差异",
-    keywords: ["有点高", "重新", "调整", "修改", "0.5", "1.45", "人天", "按"],
+    keywords: ["有点高", "重新", "调整", "修改", "0.5", "1.45", "人天", "差异"],
     suggestion: "让内部对接人确认最终人天口径，并把差异原因写入报价记录。"
   },
   {
@@ -57,6 +70,8 @@ const server = http.createServer(async (req, res) => {
     if (req.url === "/api/groups") return sendJson(res, config.groups);
     if (req.url === "/api/messages") return sendJson(res, recentMessages());
     if (req.url === "/api/alerts") return sendJson(res, recentAlerts());
+    if (req.url === "/api/queues") return sendJson(res, buildQueues());
+    if (req.url === "/api/clusters") return sendJson(res, buildClusters());
     if (req.url === "/api/digest/today") return sendJson(res, buildTodayDigest());
     if (req.url === "/api/sync-now" && (req.method === "POST" || req.method === "GET")) {
       const result = await syncNow("manual");
@@ -155,7 +170,8 @@ function fetchPopoMessages(timeStart, timeEnd) {
 }
 
 function normalizeMessage(message) {
-  return {
+  const content = sanitizeContent(message.content || "");
+  const normalized = {
     msg_id: message.msg_id,
     t_msg: message.t_msg,
     time: new Date(message.t_msg).toISOString(),
@@ -163,34 +179,108 @@ function normalizeMessage(message) {
     sender_uid: message.nfrom || "",
     group_id: message.session_id || message.nto || "",
     group_name: message.sessionName || groupName(message.session_id),
-    content: sanitizeContent(message.content || ""),
+    sessionType: message.sessionType,
+    sourceType: message.sessionType === 1 ? "direct" : "group",
+    content,
     raw_type: message.msg_type || ""
   };
+  return { ...normalized, ...deriveMessageMeta(normalized) };
 }
 
 function analyzeMessage(message) {
-  const text = message.content;
+  const decorated = decorateMessage(message);
+  if (decorated.priority === "P4") return [];
   return riskRules
-    .filter((rule) => rule.keywords.some((keyword) => text.includes(keyword)))
+    .filter((rule) => rule.keywords.some((keyword) => decorated.content.includes(keyword)))
     .map((rule) => ({
-      id: `${message.msg_id}-${rule.title}`,
-      msg_id: message.msg_id,
-      group_id: message.group_id,
-      group_name: message.group_name,
+      id: `${decorated.msg_id}-${rule.title}`,
+      msg_id: decorated.msg_id,
+      group_id: decorated.group_id,
+      group_name: decorated.group_name,
       level: rule.level,
       title: rule.title,
       suggestion: rule.suggestion,
-      content: text,
-      sender: message.sender,
-      t_msg: message.t_msg,
-      time: message.time
+      content: decorated.content,
+      sender: decorated.sender,
+      t_msg: decorated.t_msg,
+      time: decorated.time
     }));
+}
+
+function buildQueues() {
+  const messages = recentDecoratedMessages();
+  return {
+    pending: messages.filter((message) => ["P0", "P1"].includes(message.priority)),
+    mentions: messages.filter((message) => message.mentionsMe),
+    direct: messages.filter((message) => message.sourceType === "direct"),
+    project: messages.filter((message) => message.projectTags.length),
+    business: messages.filter((message) => message.businessTags.length && message.priority !== "P4"),
+    digest: messages.filter((message) => ["P2", "P3"].includes(message.priority)),
+    muted: messages.filter((message) => message.priority === "P4")
+  };
+}
+
+function buildQueueCounts() {
+  return Object.fromEntries(Object.entries(buildQueues()).map(([key, items]) => [key, items.length]));
+}
+
+function buildClusters() {
+  const map = new Map();
+  for (const message of recentDecoratedMessages()) {
+    const topic = topicForMessage(message);
+    const key = message.sourceType === "direct"
+      ? `direct:${message.sender_uid || message.sender}`
+      : `group:${message.group_id || message.group_name}:${topic}`;
+
+    if (!map.has(key)) {
+      map.set(key, {
+        id: key,
+        title: message.sourceType === "direct" ? `私聊：${message.sender}` : message.group_name,
+        sourceType: message.sourceType,
+        groupName: message.group_name,
+        topic,
+        priority: message.priority,
+        priorityReason: message.priorityReason,
+        status: "new",
+        messages: [],
+        messageCount: 0,
+        mentionsMe: false,
+        businessTags: [],
+        projectTags: []
+      });
+    }
+
+    const cluster = map.get(key);
+    cluster.messages.push(message);
+    cluster.messageCount += 1;
+    cluster.mentionsMe ||= message.mentionsMe;
+    cluster.priority = highestPriority(cluster.priority, message.priority);
+    if (priorityWeight(message.priority) >= priorityWeight(cluster.priority)) {
+      cluster.priorityReason = message.priorityReason;
+    }
+    cluster.businessTags = unique([...cluster.businessTags, ...message.businessTags]);
+    cluster.projectTags = unique([...cluster.projectTags, ...message.projectTags]);
+  }
+
+  return [...map.values()]
+    .map((cluster) => {
+      const sorted = cluster.messages.sort((a, b) => b.t_msg - a.t_msg);
+      return {
+        ...cluster,
+        latestAt: sorted[0]?.t_msg || 0,
+        messages: sorted.slice(0, 12),
+        summary: buildClusterSummary({ ...cluster, messages: sorted }),
+        suggestedActions: suggestedActionsForCluster({ ...cluster, messages: sorted })
+      };
+    })
+    .sort((a, b) => priorityWeight(b.priority) - priorityWeight(a.priority) || b.latestAt - a.latestAt);
 }
 
 function buildTodayDigest() {
   const todayStart = startOfLocalDay(Date.now());
   const messages = state.messages
-    .filter((message) => message.t_msg >= todayStart)
+    .map(decorateMessage)
+    .filter((message) => message.t_msg >= todayStart && message.priority !== "P4")
     .sort((a, b) => a.t_msg - b.t_msg);
   const alerts = state.alerts
     .filter((alert) => alert.t_msg >= todayStart)
@@ -214,7 +304,7 @@ function buildTodayDigest() {
 
 function progressFromMessages(messages) {
   return messages
-    .filter((message) => /报价|人天|节点|统计|确认|修改|排期|引擎/.test(message.content))
+    .filter((message) => /报价|人天|节点|统计|确认|修改|排期|引擎|合同|结算/.test(message.content))
     .slice(-5)
     .map((message) => `${localTimeText(message.t_msg)} ${message.sender}：${message.content}`);
 }
@@ -229,6 +319,7 @@ function questionsFromAlerts(alerts) {
   if (alerts.some((alert) => alert.title.includes("人天"))) questions.push("人天差异是否已有内部对接人确认最终口径？");
   if (alerts.some((alert) => alert.title.includes("排期"))) questions.push("排期或节点调整是否已有明确新时间？");
   if (alerts.some((alert) => alert.title.includes("资料"))) questions.push("统计类信息是否需要继续补名单、权限或工具版本？");
+  if (alerts.some((alert) => alert.title.includes("合同"))) questions.push("合同、APC、验收截图、结算金额和供应商资质是否已齐套？");
   return questions;
 }
 
@@ -241,17 +332,125 @@ function healthPayload() {
     isSyncing,
     messageCount: state.messages.length,
     alertCount: state.alerts.length,
+    queueCounts: buildQueueCounts(),
     groups: config.groups,
     pollIntervalMs: config.pollIntervalMs
   };
 }
 
 function recentMessages() {
-  return state.messages.slice(-100).reverse();
+  return recentDecoratedMessages();
+}
+
+function recentDecoratedMessages() {
+  return state.messages.slice(-200).map(decorateMessage).sort((a, b) => b.t_msg - a.t_msg);
 }
 
 function recentAlerts() {
   return state.alerts.slice(-100).reverse();
+}
+
+function decorateMessage(message) {
+  return { ...message, ...deriveMessageMeta(message) };
+}
+
+function deriveMessageMeta(message) {
+  const sourceType = classifySourceType(message);
+  const content = message.content || "";
+  const text = `${message.group_name || ""} ${content}`;
+  const mentionsMe = isMention(text);
+  const projectTags = projectTagsFor(text);
+  const businessTags = businessTagsFor(content);
+  const noiseScore = noisePatterns.reduce((score, pattern) => score + (content.includes(pattern) ? 1 : 0), 0);
+  const { priority, priorityReason } = classifyPriority({ sourceType, mentionsMe, projectTags, businessTags, noiseScore });
+  return { sourceType, mentionsMe, projectTags, businessTags, noiseScore, priority, priorityReason };
+}
+
+function classifyPriority(context) {
+  if (context.sourceType === "direct") return { priority: "P0", priorityReason: "私聊消息需要优先确认" };
+  if (context.mentionsMe) return { priority: "P0", priorityReason: "群内 @你，需要优先处理" };
+  if (context.businessTags.some((tag) => ["合同", "结算"].includes(tag))) {
+    return { priority: "P1", priorityReason: "合同/结算相关风险" };
+  }
+  if (context.businessTags.includes("报价") && context.projectTags.length) {
+    return { priority: "P1", priorityReason: "项目报价相关" };
+  }
+  if (context.noiseScore >= 1 && !context.businessTags.length) {
+    return { priority: "P4", priorityReason: "低价值确认类消息，默认静默" };
+  }
+  if (context.projectTags.length || context.businessTags.length) {
+    return { priority: "P2", priorityReason: "项目或业务相关，可进入摘要" };
+  }
+  return { priority: "P3", priorityReason: "普通群消息，仅保留上下文" };
+}
+
+function classifySourceType(message) {
+  if (message.sourceType) return message.sourceType;
+  if (message.sessionType === 1 || !message.group_id) return "direct";
+  return "group";
+}
+
+function isMention(text) {
+  return mentionAliases.some((alias) => String(text || "").includes(alias));
+}
+
+function projectTagsFor(text) {
+  return projectKeywords.filter((keyword) => String(text || "").includes(keyword));
+}
+
+function businessTagsFor(text) {
+  return businessTagRules
+    .filter((rule) => rule.keywords.some((keyword) => String(text || "").includes(keyword)))
+    .map((rule) => rule.tag);
+}
+
+function topicForMessage(message) {
+  return message.businessTags[0] || message.projectTags[0] || (message.priority === "P4" ? "静默确认" : "普通讨论");
+}
+
+function buildClusterSummary(cluster) {
+  const latest = cluster.messages[0];
+  if (!latest) return "暂无消息。";
+  if (cluster.priority === "P0" && cluster.mentionsMe) return `群内 @你，需要优先确认：${latest.content}`;
+  if (cluster.priority === "P0" && cluster.sourceType === "direct") return `私聊需要优先处理：${latest.content}`;
+  if (cluster.businessTags.includes("报价")) return "报价/人天相关讨论，需要确认口径、资源数量和可复核材料。";
+  if (cluster.businessTags.includes("合同") || cluster.businessTags.includes("结算")) return "合同/结算相关信息，需要检查前置材料和流程状态。";
+  if (cluster.priority === "P4") return "低价值确认类消息，默认静默，不进入待处理。";
+  return latest.content;
+}
+
+function suggestedActionsForCluster(cluster) {
+  const actions = [];
+  if (cluster.priority === "P0") {
+    actions.push("先确认是否需要你回复或推进。");
+    actions.push("查看上下文后生成回复草稿。");
+  }
+  if (cluster.businessTags.includes("报价")) {
+    actions.push("核对报价表中的资源、数量、环节、人天、合计和截图。");
+    actions.push("确认是否存在人天差异、增补或口径变更。");
+  }
+  if (cluster.businessTags.includes("合同") || cluster.businessTags.includes("结算")) {
+    actions.push("检查合同、APC/OA、验收截图、发票和结算金额是否齐套。");
+  }
+  if (cluster.businessTags.includes("文件")) {
+    actions.push("确认图片、截图、附件是否能归档，并补齐缺失材料。");
+  }
+  if (cluster.priority === "P4") {
+    actions.push("默认静默，不进入待处理。");
+  }
+  return actions.length ? unique(actions) : ["保留上下文，进入日/周报摘要即可。"];
+}
+
+function highestPriority(a, b) {
+  return priorityWeight(b) > priorityWeight(a) ? b : a;
+}
+
+function priorityWeight(priority) {
+  return { P0: 5, P1: 4, P2: 3, P3: 2, P4: 1 }[priority] || 0;
+}
+
+function unique(items) {
+  return [...new Set(items.filter(Boolean))];
 }
 
 function openEvents(req, res) {

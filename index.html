@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>POPO 助手</title>
-    <link rel="stylesheet" href="./styles.css?v=20260624-split2" />
+    <link rel="stylesheet" href="./styles.css?v=20260624-queue1" />
   </head>
   <body>
     <div class="corner-badge">内测版</div>
@@ -28,32 +28,33 @@
       </header>
 
       <main class="workbench">
-        <section class="message-panel">
+        <aside class="queue-rail">
+          <div class="rail-head">
+            <h1>优先级</h1>
+            <p>按处理价值分流，普通群消息默认静默。</p>
+          </div>
+          <nav id="queueList" class="queue-list" aria-label="消息队列"></nav>
+          <div class="sync-metrics">
+            <div>
+              <span>消息</span>
+              <strong id="syncMessageCount">-</strong>
+            </div>
+            <div>
+              <span>风险</span>
+              <strong id="syncAlertCount">-</strong>
+            </div>
+          </div>
+        </aside>
+
+        <section class="cluster-panel">
           <div class="panel-head">
             <div>
-              <h1>消息流</h1>
-              <p>按 POPO 消息类型分流，左侧看信息，右侧看处理建议。</p>
+              <h2 id="activeQueueTitle">待处理</h2>
+              <p id="activeQueueHint">群内 @我、私聊、报价/合同/结算高风险消息优先进入这里。</p>
             </div>
-            <div class="sync-metrics" id="localSyncCard">
-              <div>
-                <span>消息</span>
-                <strong id="syncMessageCount">-</strong>
-              </div>
-              <div>
-                <span>风险</span>
-                <strong id="syncAlertCount">-</strong>
-              </div>
-            </div>
+            <button class="outline-button" id="loadLocalDigestButton" type="button">生成今日日报</button>
           </div>
-
-          <div class="feed-tabs" aria-label="消息类型">
-            <button class="active" data-feed="all" type="button">全部 <span id="countAll">0</span></button>
-            <button data-feed="group" type="button">群聊 <span id="countGroup">0</span></button>
-            <button data-feed="direct" type="button">私聊 <span id="countDirect">0</span></button>
-            <button data-feed="mention" type="button">@我 <span id="countMention">0</span></button>
-          </div>
-
-          <div class="message-feed" id="messageFeed">
+          <div class="cluster-list" id="clusterList">
             <div class="empty-state">正在连接本地同步服务...</div>
           </div>
         </section>
@@ -62,28 +63,28 @@
           <div class="panel-head">
             <div>
               <h2>处理建议</h2>
-              <p id="selectedHint">选择左侧消息后查看风险、待办和建议回复。</p>
+              <p id="selectedHint">选择中间会话后查看判断、动作和建议回复。</p>
             </div>
-            <button class="outline-button" id="loadLocalDigestButton" type="button">生成今日日报</button>
+            <span class="mode-pill" id="selectedPriority">未选择</span>
           </div>
 
           <article class="selected-message" id="selectedMessage">
-            <span>未选择消息</span>
-            <p>左侧会显示群聊、私聊、@我 三类消息。当前 MVP 已接入两个报价群，私聊和 @我 会在后端扩展后进入同一队列。</p>
+            <span>未选择会话</span>
+            <p>左侧先选优先级队列，中间选择会话。系统会把同一群、同一主题的消息折叠为一个处理单元。</p>
           </article>
 
           <div class="action-grid">
             <section class="action-card">
-              <h3>风险判断</h3>
+              <h3>判断依据</h3>
               <div id="riskList" class="action-list">
-                <p class="muted">暂无选中消息。</p>
+                <p class="muted">暂无选中会话。</p>
               </div>
             </section>
 
             <section class="action-card">
-              <h3>待办建议</h3>
+              <h3>下一步动作</h3>
               <div id="todoList" class="action-list">
-                <p class="muted">暂无选中消息。</p>
+                <p class="muted">暂无选中会话。</p>
               </div>
             </section>
           </div>
@@ -93,7 +94,7 @@
               <h3>建议回复草稿</h3>
               <span>不会自动发送，需要你确认后再复制或接入发送流程。</span>
             </div>
-            <textarea id="replyDraft" readonly placeholder="选择消息后生成建议回复草稿"></textarea>
+            <textarea id="replyDraft" readonly placeholder="选择会话后生成建议回复草稿"></textarea>
           </section>
 
           <section class="digest-preview">
@@ -109,6 +110,6 @@
       </main>
     </div>
 
-    <script src="./app.js?v=20260624-split2"></script>
+    <script src="./app.js?v=20260624-queue1"></script>
   </body>
 </html>

@@ -1,13 +1,23 @@
 const localApiBase = "http://127.0.0.1:8787";
 
+const queueMeta = [
+  { id: "pending", label: "待处理", hint: "P0/P1", description: "群内 @我、私聊、高风险报价/合同/结算。" },
+  { id: "mentions", label: "@我", hint: "点名", description: "群聊中明确 @你的消息。" },
+  { id: "direct", label: "私聊", hint: "个人", description: "私聊消息默认最高优先级。" },
+  { id: "project", label: "项目关注", hint: "项目", description: "H55/H74/Joker 等项目相关讨论。" },
+  { id: "business", label: "业务风险", hint: "报价/合同", description: "报价、人天、合同、结算、归档材料。" },
+  { id: "digest", label: "摘要", hint: "日/周报", description: "普通但有价值的上下文，进入日报/周报。" },
+  { id: "muted", label: "已静默", hint: "低价值", description: "收到、好滴、普通确认类消息。" }
+];
+
 const state = {
-  messages: [],
+  queues: {},
+  clusters: [],
   alerts: [],
-  activeFeed: "all",
-  selectedMessageId: "",
+  activeQueue: "pending",
+  selectedClusterId: "",
   search: "",
-  collapsedGroups: new Set(),
-  manualAnalysis: new Set()
+  health: null
 };
 
 const elements = {
@@ -16,57 +26,52 @@ const elements = {
   syncNowButton: document.querySelector("#syncNowButton"),
   syncMessageCount: document.querySelector("#syncMessageCount"),
   syncAlertCount: document.querySelector("#syncAlertCount"),
-  messageFeed: document.querySelector("#messageFeed"),
+  queueList: document.querySelector("#queueList"),
+  clusterList: document.querySelector("#clusterList"),
   messageSearch: document.querySelector("#messageSearch"),
+  activeQueueTitle: document.querySelector("#activeQueueTitle"),
+  activeQueueHint: document.querySelector("#activeQueueHint"),
   selectedHint: document.querySelector("#selectedHint"),
+  selectedPriority: document.querySelector("#selectedPriority"),
   selectedMessage: document.querySelector("#selectedMessage"),
   riskList: document.querySelector("#riskList"),
   todoList: document.querySelector("#todoList"),
   replyDraft: document.querySelector("#replyDraft"),
   digestMeta: document.querySelector("#digestMeta"),
   digestPreview: document.querySelector("#digestPreview"),
-  loadLocalDigestButton: document.querySelector("#loadLocalDigestButton"),
-  countAll: document.querySelector("#countAll"),
-  countGroup: document.querySelector("#countGroup"),
-  countDirect: document.querySelector("#countDirect"),
-  countMention: document.querySelector("#countMention")
+  loadLocalDigestButton: document.querySelector("#loadLocalDigestButton")
 };
-
-document.querySelectorAll("[data-feed]").forEach((button) => {
-  button.addEventListener("click", () => {
-    document.querySelectorAll("[data-feed]").forEach((item) => item.classList.remove("active"));
-    button.classList.add("active");
-    state.activeFeed = button.dataset.feed;
-    renderMessages();
-  });
-});
 
 elements.syncNowButton.addEventListener("click", syncNow);
 elements.loadLocalDigestButton.addEventListener("click", loadDigest);
 elements.messageSearch.addEventListener("input", (event) => {
   state.search = event.target.value.trim().toLowerCase();
-  renderMessages();
+  renderClusters();
 });
 
 init();
 
 async function init() {
+  renderQueues();
   await refreshAll();
   connectEvents();
 }
 
 async function refreshAll() {
   try {
-    const [health, messages, alerts] = await Promise.all([
+    const [health, queues, clusters, alerts] = await Promise.all([
       fetchJson(`${localApiBase}/api/health`),
-      fetchJson(`${localApiBase}/api/messages`),
+      fetchJson(`${localApiBase}/api/queues`),
+      fetchJson(`${localApiBase}/api/clusters`),
       fetchJson(`${localApiBase}/api/alerts`)
     ]);
-    state.messages = messages;
+    state.health = health;
+    state.queues = queues;
+    state.clusters = clusters;
     state.alerts = alerts;
     updateHealth(health);
-    renderCounts();
-    renderMessages();
+    renderQueues();
+    renderClusters();
     keepSelection();
   } catch {
     updateOffline();
@@ -100,10 +105,11 @@ function connectEvents() {
 }
 
 function updateHealth(health) {
+  state.health = health;
   elements.serviceMini.classList.remove("offline");
   elements.syncStatus.textContent = health.lastSyncAt ? `已连接 ${formatTime(health.lastSyncAt)}` : "已连接";
   elements.syncMessageCount.textContent = health.messageCount;
-  elements.syncAlertCount.textContent = actionableAlertCount();
+  elements.syncAlertCount.textContent = health.alertCount;
 }
 
 function updateOffline() {
@@ -111,196 +117,171 @@ function updateOffline() {
   elements.syncStatus.textContent = "未连接";
   elements.syncMessageCount.textContent = "-";
   elements.syncAlertCount.textContent = "-";
-  elements.messageFeed.innerHTML = `<div class="empty-state">本地同步服务未连接。请在项目目录运行：<code>npm run server</code></div>`;
+  elements.clusterList.innerHTML = `<div class="empty-state">本地同步服务未连接。请在项目目录运行：<code>npm run server</code></div>`;
 }
 
-function renderCounts() {
-  const counts = countByFeed();
-  elements.countAll.textContent = counts.all;
-  elements.countGroup.textContent = counts.group;
-  elements.countDirect.textContent = counts.direct;
-  elements.countMention.textContent = counts.mention;
+function renderQueues() {
+  const counts = state.health?.queueCounts || {};
+  elements.queueList.innerHTML = queueMeta.map((queue) => `
+    <button class="queue-item${queue.id === state.activeQueue ? " active" : ""}" type="button" data-queue="${queue.id}">
+      <span>
+        <strong>${queue.label}</strong>
+        <small>${queue.hint}</small>
+      </span>
+      <em>${counts[queue.id] ?? 0}</em>
+    </button>
+  `).join("");
+
+  elements.queueList.querySelectorAll("[data-queue]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.activeQueue = button.dataset.queue;
+      state.selectedClusterId = "";
+      renderQueues();
+      renderClusters();
+    });
+  });
 }
 
-function countByFeed() {
-  return state.messages.reduce(
-    (acc, message) => {
-      acc.all += 1;
-      acc[classifyMessage(message)] += 1;
-      if (isMention(message) && classifyMessage(message) !== "mention") acc.mention += 1;
-      return acc;
-    },
-    { all: 0, group: 0, direct: 0, mention: 0 }
-  );
-}
+function renderClusters() {
+  const queue = queueMeta.find((item) => item.id === state.activeQueue) || queueMeta[0];
+  elements.activeQueueTitle.textContent = queue.label;
+  elements.activeQueueHint.textContent = queue.description;
 
-function renderMessages() {
-  const messages = filteredMessages();
-  if (!messages.length) {
-    elements.messageFeed.innerHTML = `<div class="empty-state">当前分流暂无消息。</div>`;
+  const clusters = filteredClusters();
+  if (!clusters.length) {
+    elements.clusterList.innerHTML = `<div class="empty-state">当前队列暂无会话。普通群消息会保留在摘要或已静默中，避免打断。</div>`;
     clearSelection();
     return;
   }
 
-  elements.messageFeed.innerHTML = groupedMessageSections(messages);
-  elements.messageFeed.querySelectorAll("[data-message-id]").forEach((card) => {
-    card.addEventListener("click", () => selectMessage(card.dataset.messageId));
-  });
-  elements.messageFeed.querySelectorAll("[data-group-key]").forEach((button) => {
-    button.addEventListener("click", () => toggleGroup(button.dataset.groupKey));
+  elements.clusterList.innerHTML = clusters.map(clusterCard).join("");
+  elements.clusterList.querySelectorAll("[data-cluster-id]").forEach((card) => {
+    card.addEventListener("click", () => selectCluster(card.dataset.clusterId));
   });
 
-  if (!state.selectedMessageId || !messages.some((message) => message.msg_id === state.selectedMessageId)) {
-    selectMessage(messages[0].msg_id);
+  if (!state.selectedClusterId || !clusters.some((cluster) => cluster.id === state.selectedClusterId)) {
+    selectCluster(clusters[0].id);
   }
 }
 
-function filteredMessages() {
-  return state.messages
-    .filter((message) => {
-      if (state.activeFeed === "all") return true;
-      if (state.activeFeed === "mention") return isMention(message);
-      return classifyMessage(message) === state.activeFeed;
-    })
-    .filter((message) => {
+function filteredClusters() {
+  const queueMessageIds = new Set((state.queues[state.activeQueue] || []).map((message) => message.msg_id));
+  return state.clusters
+    .filter((cluster) => cluster.messages.some((message) => queueMessageIds.has(message.msg_id)))
+    .filter((cluster) => {
       if (!state.search) return true;
-      return `${message.group_name} ${message.sender} ${message.content}`.toLowerCase().includes(state.search);
+      const text = `${cluster.title} ${cluster.groupName} ${cluster.topic} ${cluster.summary} ${cluster.messages.map((message) => message.content).join(" ")}`;
+      return text.toLowerCase().includes(state.search);
     });
 }
 
-function groupedMessageSections(messages) {
-  const groups = groupMessages(messages);
-  return groups.map((group, index) => {
-    const key = group.key;
-    if (index === 0 && !state.collapsedGroups.has(key) && !state.selectedMessageId) {
-      state.collapsedGroups.delete(key);
-    }
-    const collapsed = state.collapsedGroups.has(key);
-    const mentionCount = group.items.filter(isMention).length;
-    const alertCount = group.items.reduce((count, message) => count + visibleAlertsForMessage(message).length, 0);
-    return `
-      <section class="message-group">
-        <button class="group-header" type="button" data-group-key="${escapeHtml(key)}">
-          <div>
-            <strong>${escapeHtml(group.title)}</strong>
-            <span>${group.items.length} 条消息${mentionCount ? ` · ${mentionCount} 条 @我` : ""}${alertCount ? ` · ${alertCount} 条建议` : ""}</span>
-          </div>
-          <span>${collapsed ? "展开" : "收起"}</span>
-        </button>
-        ${collapsed ? "" : `<div class="group-messages">${group.items.map(messageCard).join("")}</div>`}
-      </section>
-    `;
-  }).join("");
-}
-
-function groupMessages(messages) {
-  const map = new Map();
-  messages.forEach((message) => {
-    const type = classifyMessage(message);
-    const key = type === "direct" ? `direct:${message.sender_uid || message.sender}` : `group:${message.group_id || message.group_name}`;
-    const title = type === "direct" ? `私聊 · ${message.sender || "未知联系人"}` : message.group_name || "未知群聊";
-    if (!map.has(key)) map.set(key, { key, title, items: [] });
-    map.get(key).items.push(message);
-  });
-  return [...map.values()];
-}
-
-function toggleGroup(key) {
-  if (state.collapsedGroups.has(key)) {
-    state.collapsedGroups.delete(key);
-  } else {
-    state.collapsedGroups.add(key);
-  }
-  renderMessages();
-}
-
-function messageCard(message) {
-  const alerts = visibleAlertsForMessage(message);
-  const feed = isMention(message) ? "@我" : classifyMessage(message) === "direct" ? "私聊" : "群聊";
-  const active = message.msg_id === state.selectedMessageId ? " active" : "";
-  const summary = alerts.length ? `<strong>${alerts.length} 条建议</strong>` : `<span>${shouldAnalyzeMessage(message) ? "无强提醒" : "未分析"}</span>`;
+function clusterCard(cluster) {
+  const active = cluster.id === state.selectedClusterId ? " active" : "";
+  const latest = cluster.messages[0];
+  const tags = [...cluster.projectTags.slice(0, 2), ...cluster.businessTags.slice(0, 2)];
   return `
-    <article class="message-card${active}" data-message-id="${escapeHtml(message.msg_id)}">
-      <div class="message-card-top">
-        <span class="feed-pill">${feed}</span>
-        <time>${formatTime(message.t_msg)}</time>
+    <article class="cluster-card${active} priority-${cluster.priority.toLowerCase()}" data-cluster-id="${escapeHtml(cluster.id)}">
+      <div class="cluster-card-top">
+        <span class="priority-pill">${cluster.priority}</span>
+        <time>${formatTime(cluster.latestAt)}</time>
       </div>
-      <h3>${escapeHtml(classifyMessage(message) === "direct" ? message.sender : message.group_name || "未知群聊")}</h3>
-      <p>${escapeHtml(message.content)}</p>
-      <div class="message-meta">
-        <span>${escapeHtml(message.sender || "未知成员")}</span>
-        ${summary}
+      <h3>${escapeHtml(cluster.title)}</h3>
+      <p>${escapeHtml(cluster.summary)}</p>
+      <div class="tag-row">
+        <span>${escapeHtml(cluster.topic)}</span>
+        ${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}
+      </div>
+      <div class="cluster-meta">
+        <span>${cluster.messageCount} 条消息</span>
+        <strong>${escapeHtml(cluster.priorityReason || latest?.priorityReason || "")}</strong>
       </div>
     </article>
   `;
 }
 
-function selectMessage(messageId) {
-  state.selectedMessageId = messageId;
-  document.querySelectorAll(".message-card").forEach((card) => {
-    card.classList.toggle("active", card.dataset.messageId === messageId);
+function selectCluster(clusterId) {
+  state.selectedClusterId = clusterId;
+  document.querySelectorAll(".cluster-card").forEach((card) => {
+    card.classList.toggle("active", card.dataset.clusterId === clusterId);
   });
 
-  const message = state.messages.find((item) => item.msg_id === messageId);
-  if (!message) return clearSelection();
+  const cluster = state.clusters.find((item) => item.id === clusterId);
+  if (!cluster) return clearSelection();
 
-  const alerts = visibleAlertsForMessage(message);
-  const canAnalyze = !shouldAnalyzeMessage(message);
-  elements.selectedHint.textContent = `${message.group_name} / ${message.sender}`;
+  elements.selectedPriority.textContent = cluster.priority;
+  elements.selectedPriority.className = `mode-pill priority-${cluster.priority.toLowerCase()}`;
+  elements.selectedHint.textContent = `${cluster.title} / ${cluster.topic}`;
   elements.selectedMessage.innerHTML = `
-    <span>${formatTime(message.t_msg)} · ${escapeHtml(message.sender)}</span>
-    <h3>${escapeHtml(message.group_name)}</h3>
-    <div class="rich-message">${renderRichContent(message.content)}</div>
-    ${canAnalyze ? `<button class="outline-button analyze-button" type="button" id="analyzeSelectedButton">分析这条消息</button>` : ""}
+    <span>${cluster.sourceType === "direct" ? "私聊" : "群聊"} · ${escapeHtml(cluster.groupName || cluster.title)}</span>
+    <h3>${escapeHtml(cluster.title)}</h3>
+    <p>${escapeHtml(cluster.summary)}</p>
+    <div class="message-thread">
+      ${cluster.messages.map(threadMessage).join("")}
+    </div>
   `;
-  document.querySelector("#analyzeSelectedButton")?.addEventListener("click", () => {
-    state.manualAnalysis.add(message.msg_id);
-    selectMessage(message.msg_id);
-    renderMessages();
+
+  const relatedAlerts = alertsForCluster(cluster);
+  elements.riskList.innerHTML = riskItems(cluster, relatedAlerts);
+  elements.todoList.innerHTML = cluster.suggestedActions.map((item) => `<p class="todo-item">${escapeHtml(item)}</p>`).join("");
+  elements.replyDraft.value = buildReplyDraft(cluster, relatedAlerts);
+}
+
+function threadMessage(message) {
+  return `
+    <article class="thread-message">
+      <div>
+        <strong>${escapeHtml(message.sender || "未知成员")}</strong>
+        <time>${formatTime(message.t_msg)}</time>
+      </div>
+      <div class="rich-message">${renderRichContent(message.content)}</div>
+    </article>
+  `;
+}
+
+function alertsForCluster(cluster) {
+  const ids = new Set(cluster.messages.map((message) => message.msg_id));
+  return state.alerts.filter((alert) => ids.has(alert.msg_id));
+}
+
+function riskItems(cluster, alerts) {
+  const lines = [
+    { level: cluster.priority, title: cluster.priorityReason, content: cluster.summary }
+  ];
+  alerts.slice(0, 5).forEach((alert) => {
+    lines.push({ level: alert.level, title: alert.title, content: alert.content });
   });
-
-  elements.riskList.innerHTML = canAnalyze
-    ? `<p class="muted">这是一条未 @ 你的群聊消息，默认只展示不分析。需要处理时点击上方“分析这条消息”。</p>`
-    : alerts.length
-    ? alerts.map((alert) => `
-        <article class="risk-row">
-          <span class="${alert.level === "高" ? "level-high" : "level-mid"}">${alert.level}</span>
-          <div>
-            <strong>${escapeHtml(alert.title)}</strong>
-            <p>${escapeHtml(alert.content)}</p>
-          </div>
-        </article>
-      `).join("")
-    : `<p class="muted">未命中强风险，建议只做普通关注。</p>`;
-
-  elements.todoList.innerHTML = canAnalyze
-    ? `<p class="todo-item">默认不生成待办，避免普通群消息干扰工作流。</p>`
-    : alerts.length
-    ? [...new Set(alerts.map((alert) => alert.suggestion))].map((todo) => `<p class="todo-item">${escapeHtml(todo)}</p>`).join("")
-    : `<p class="todo-item">无需立即处理，保留在消息流中观察。</p>`;
-
-  elements.replyDraft.value = canAnalyze ? "" : buildReplyDraft(message, alerts);
+  return lines.map((line) => `
+    <article class="risk-row">
+      <span class="${riskClass(line.level)}">${escapeHtml(line.level)}</span>
+      <div>
+        <strong>${escapeHtml(line.title)}</strong>
+        <p>${escapeHtml(line.content)}</p>
+      </div>
+    </article>
+  `).join("");
 }
 
 function clearSelection() {
-  state.selectedMessageId = "";
-  elements.selectedHint.textContent = "选择左侧消息后查看风险、待办和建议回复。";
-  elements.selectedMessage.innerHTML = `<span>未选择消息</span><p>当前分流暂无可处理消息。</p>`;
-  elements.riskList.innerHTML = `<p class="muted">暂无选中消息。</p>`;
-  elements.todoList.innerHTML = `<p class="muted">暂无选中消息。</p>`;
+  state.selectedClusterId = "";
+  elements.selectedHint.textContent = "选择中间会话后查看判断、动作和建议回复。";
+  elements.selectedPriority.textContent = "未选择";
+  elements.selectedPriority.className = "mode-pill";
+  elements.selectedMessage.innerHTML = `<span>未选择会话</span><p>当前队列暂无可处理会话。</p>`;
+  elements.riskList.innerHTML = `<p class="muted">暂无选中会话。</p>`;
+  elements.todoList.innerHTML = `<p class="muted">暂无选中会话。</p>`;
   elements.replyDraft.value = "";
 }
 
 function keepSelection() {
-  if (state.selectedMessageId && state.messages.some((message) => message.msg_id === state.selectedMessageId)) {
-    selectMessage(state.selectedMessageId);
+  if (state.selectedClusterId && state.clusters.some((cluster) => cluster.id === state.selectedClusterId)) {
+    selectCluster(state.selectedClusterId);
   }
 }
 
 async function loadDigest() {
   try {
     const digest = await fetchJson(`${localApiBase}/api/digest/today`);
-    elements.digestMeta.textContent = `${digest.date} · ${digest.messageCount} 条消息 · ${digest.alertCount} 条风险`;
+    elements.digestMeta.textContent = `${digest.date} · ${digest.messageCount} 条有效消息 · ${digest.alertCount} 条风险`;
     elements.digestPreview.innerHTML = `
       ${digest.groups.map((group) => `
         <section class="digest-group">
@@ -320,41 +301,20 @@ async function loadDigest() {
   }
 }
 
-function alertsForMessage(message) {
-  return state.alerts.filter((alert) => alert.msg_id === message.msg_id);
-}
-
-function visibleAlertsForMessage(message) {
-  return shouldAnalyzeMessage(message) ? alertsForMessage(message) : [];
-}
-
-function actionableAlertCount() {
-  return state.messages.reduce((total, message) => total + visibleAlertsForMessage(message).length, 0);
-}
-
-function shouldAnalyzeMessage(message) {
-  return classifyMessage(message) === "direct" || isMention(message) || state.manualAnalysis.has(message.msg_id);
-}
-
-function classifyMessage(message) {
-  if (message.sessionType === 1 || !message.group_id) return "direct";
-  return "group";
-}
-
-function isMention(message) {
-  return /@孙斌|@sunbin|@POPO 助手|@我/.test(message.content || "");
-}
-
-function buildReplyDraft(message, alerts) {
-  if (!alerts.length) return "收到，我先关注下，有需要我再跟进。";
-  const suggestions = [...new Set(alerts.map((alert) => alert.suggestion))];
-  return `好滴，我先确认下。\n${suggestions.map((item) => `- ${item}`).join("\n")}\n确认后我同步最终口径。`;
+function buildReplyDraft(cluster, alerts) {
+  if (cluster.priority === "P4") return "这类消息默认静默，不建议主动回复。";
+  if (!alerts.length && !["P0", "P1"].includes(cluster.priority)) return "收到，我先关注下，有需要我再跟进。";
+  const actions = cluster.suggestedActions.slice(0, 3).map((item) => `- ${item}`).join("\n");
+  if (cluster.sourceType === "direct" || cluster.mentionsMe) {
+    return `收到，我先确认下。\n${actions}\n确认后我同步最终口径。`;
+  }
+  return `这条我建议先纳入日/周报跟踪。\n${actions}`;
 }
 
 function renderRichContent(content) {
-  const text = escapeHtml(content || "");
-  const urls = extractMediaUrls(content || "");
-  const withoutUrls = text.replace(/\[?https?:\/\/[^\]\s]+]?/g, "").trim();
+  const raw = String(content || "");
+  const urls = extractMediaUrls(raw);
+  const safeText = escapeHtml(raw).replace(/\[?https?:\/\/[^\]\s]+]?/g, "").trim();
   const imageHtml = urls.length
     ? `<div class="image-strip">${urls.map((url) => `
         <a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">
@@ -362,15 +322,21 @@ function renderRichContent(content) {
         </a>
       `).join("")}</div>`
     : "";
-  const placeholder = /\[图片\]/.test(content || "") && !urls.length
+  const placeholder = /\[图片\]/.test(raw) && !urls.length
     ? `<div class="image-placeholder">图片占位：当前 POPO 搜索结果只返回 [图片]，需要后端接入附件下载接口后才能展示原图。</div>`
     : "";
-  return `<p>${withoutUrls || text}</p>${imageHtml}${placeholder}`;
+  return `<p>${safeText || escapeHtml(raw)}</p>${imageHtml}${placeholder}`;
 }
 
 function extractMediaUrls(content) {
   const matches = String(content || "").match(/https?:\/\/[^\]\s]+/g) || [];
-  return [...new Set(matches.filter((url) => /popofp|popo\.fp|vipfp/.test(url)))];
+  return [...new Set(matches.filter((url) => /popofp|popo\.fp|vipfp|png|jpg|jpeg|webp|gif/i.test(url)))];
+}
+
+function riskClass(level) {
+  if (level === "P0" || level === "P1" || level === "高") return "level-high";
+  if (level === "P2" || level === "中") return "level-mid";
+  return "level-low";
 }
 
 async function fetchJson(url, options) {
