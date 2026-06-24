@@ -1,4 +1,5 @@
 const samples = {
+  digestCommand: "总结 H55 报价群今天的沟通内容，提取进展、风险、待办和需要确认的问题",
   digestInput:
     "张三：H55 本周外包角色立绘完成 6 张，剩余 2 张等主美确认。\n李四：供应商 A 报价已回，单张 1800，周五可交初稿。\n王五：合同还缺对方营业执照和开户许可证。\n赵六：昨天提交的 3 张图有两处需要改，肩甲比例和配色要收敛。",
   supplierInput:
@@ -62,20 +63,140 @@ function activatePanel(panelName) {
 }
 
 function renderDigest() {
+  const command = valueOf("digestCommand");
   const input = valueOf("digestInput");
-  const group = valueOf("digestGroup") || "当前群";
-  const range = document.querySelector("#digestRange").value;
+  const parsed = parseDigestCommand(command);
+  const group = parsed.groupName || valueOf("digestGroup") || "当前群";
+  const range = parsed.period || document.querySelector("#digestRange").value;
   const result = document.querySelector("#digestResult");
-  if (!input) {
-    result.innerHTML = emptyState("请先粘贴群消息，或载入 POPO 切片。");
+
+  if (!command && !input) {
+    result.innerHTML = emptyState("请输入需求指令，例如“总结 H55 报价群今天的沟通内容”，或粘贴群消息。");
     return;
   }
-  result.innerHTML = [
-    card(`${group} ${range}进展`, ["多个报价群有报价单、报价排期或报价修改需要确认。", "验收侧已有 POPO 验收记录上传问题，需要明确材料口径。"]),
-    card("风险", ["需求保密等级高，验收材料不能包含 PSD 或制作内容。", "部分需求暂停或内部调整，报价确认前需要先确认需求是否继续。"]),
-    card("待办", ["确认报价排期和报价单。", "补充 POPO 群内项目组确认收稿截图。"]),
-    card("需要确认", ["报价排期是否已最终确认？", "验收记录上传入口和截图标准是否统一？", "暂停需求是否需要撤回供应商报价动作？"])
-  ].join("");
+
+  if (parsed.groupName) document.querySelector("#digestGroup").value = parsed.groupName;
+  if (parsed.period) selectDigestRange(parsed.period);
+
+  const cards = [
+    intentCard(parsed, group, range),
+    card(`${group} ${range}进展`, buildProgressItems(input, parsed)),
+    card("风险", buildRiskItems(input, parsed)),
+    card("待办", buildTodoItems(input, parsed)),
+    card("需要确认", buildQuestionItems(input, parsed))
+  ];
+
+  result.innerHTML = cards.join("");
+}
+
+function parseDigestCommand(command) {
+  const text = command.trim();
+  const groupName = extractGroupName(text);
+  const groupType = extractGroupType(text);
+  const period = extractPeriod(text);
+  const focuses = extractFocuses(text);
+
+  return {
+    raw: text,
+    groupName,
+    groupType,
+    period,
+    focuses,
+    intent: text.includes("周报") ? "生成周报" : "生成日报",
+    dataScope: groupName ? "指定群" : groupType ? "群类型" : "当前群"
+  };
+}
+
+function extractGroupName(text) {
+  const directMatch = text.match(/(?:总结|整理|看一下|看下|分析)?\s*([A-Za-z0-9\u4e00-\u9fa5【】\-_\s]{2,30}?群)/);
+  if (!directMatch) return "";
+  return directMatch[1].replace(/^(一下|下|帮我|请|把)/, "").trim();
+}
+
+function extractGroupType(text) {
+  if (/供应商|外包|商务/.test(text)) return "供应商类群";
+  if (/报价|排期|费用|预算/.test(text)) return "报价类群";
+  if (/验收|交付|收稿/.test(text)) return "验收类群";
+  if (/合同|立项|结算|流程/.test(text)) return "流程类群";
+  if (/项目|需求|制作/.test(text)) return "项目沟通群";
+  if (/所有群|全部群|相关群|哪一类群|某类群/.test(text)) return "相关群";
+  return "";
+}
+
+function extractPeriod(text) {
+  if (/周报|本周|这周|近一周|最近一周|过去一周/.test(text)) return "过去一周";
+  if (/昨天/.test(text)) return "昨天";
+  if (/今天|今日|日报|过去一天|近一天/.test(text)) return "过去一天";
+  if (/最近|近几天/.test(text)) return "最近";
+  return "";
+}
+
+function extractFocuses(text) {
+  const focuses = [];
+  if (/进展|进度|完成/.test(text)) focuses.push("进展");
+  if (/风险|阻塞|问题/.test(text)) focuses.push("风险");
+  if (/待办|todo|行动项|下一步/.test(text)) focuses.push("待办");
+  if (/确认|待确认|需要确认/.test(text)) focuses.push("确认项");
+  if (/报价|费用|排期/.test(text)) focuses.push("报价排期");
+  if (/验收|交付/.test(text)) focuses.push("验收交付");
+  return focuses.length ? focuses : ["进展", "风险", "待办", "确认项"];
+}
+
+function selectDigestRange(period) {
+  const select = document.querySelector("#digestRange");
+  [...select.options].forEach((option) => {
+    option.selected = option.textContent === period || (period === "昨天" && option.textContent === "过去一天");
+  });
+}
+
+function intentCard(parsed, group, range) {
+  const chips = [
+    `意图：${parsed.intent}`,
+    `范围：${parsed.dataScope}`,
+    `群：${group}`,
+    parsed.groupType ? `类型：${parsed.groupType}` : "",
+    `周期：${range}`,
+    `关注：${parsed.focuses.join("、")}`
+  ].filter(Boolean);
+
+  return `
+    <div class="result-card intent-card">
+      <h3>已理解你的需求</h3>
+      <div class="chip-row">${chips.map((chip) => `<span>${chip}</span>`).join("")}</div>
+      <p>后续接入真实 POPO 时，会先解析群名或群类型，再按权限拉取对应时间范围内的群消息，最后生成结构化日报或周报。</p>
+    </div>
+  `;
+}
+
+function buildProgressItems(input, parsed) {
+  if (/报价|报价单|排期/.test(input + parsed.raw)) {
+    return ["报价单、报价排期或报价修改正在等待确认。", "部分供应商已反馈排期，适合进入确认或回写流程。"];
+  }
+  return ["群内已有明确进展信息，建议按事项归类到需求、报价、验收三个维度。", "当前切片可生成日报，接入真实 POPO 后可自动覆盖指定群和时间段。"];
+}
+
+function buildRiskItems(input, parsed) {
+  const risks = [];
+  if (/保密|PSD|截图/.test(input)) risks.push("涉及保密要求，验收材料不能包含 PSD 或制作内容。");
+  if (/暂停|调整/.test(input)) risks.push("部分需求暂停或内部调整，报价确认前需要先确认需求是否继续。");
+  if (/合同|营业执照|开户/.test(input)) risks.push("合同或供应商资质材料不完整，可能影响后续流程。");
+  return risks.length ? risks : ["未发现明确阻塞，但建议继续确认报价、排期和验收材料口径。"];
+}
+
+function buildTodoItems(input, parsed) {
+  const todos = [];
+  if (/报价|排期/.test(input + parsed.raw)) todos.push("确认报价排期和报价单是否为最终版本。");
+  if (/验收|截图|收稿/.test(input + parsed.raw)) todos.push("补充 POPO 群内项目组确认收稿截图。");
+  if (/合同|营业执照|开户/.test(input)) todos.push("补齐供应商营业执照、开户许可证等合同材料。");
+  return todos.length ? todos : ["按群消息继续补充负责人、截止时间和下一步动作。"];
+}
+
+function buildQuestionItems(input, parsed) {
+  const questions = ["本次总结是否只覆盖当前群，还是需要扩展到同类型群？"];
+  if (/报价|排期/.test(input + parsed.raw)) questions.push("报价排期是否已最终确认？");
+  if (/验收|截图/.test(input + parsed.raw)) questions.push("验收记录上传入口和截图标准是否统一？");
+  if (/暂停|调整/.test(input)) questions.push("暂停需求是否需要撤回供应商报价动作？");
+  return questions;
 }
 
 function renderSupplier() {

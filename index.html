@@ -112,10 +112,14 @@
             <div class="message-stack">
               <article class="bubble bot">
                 <span>09:25 POPO 助手</span>
-                <p>选择群和周期后，可以从 POPO 切片或粘贴消息生成日报。</p>
+                <p>可以直接输入“总结 H55 报价群今天的沟通内容”，也可以说“总结供应商类群最近一周的风险和待办”。</p>
               </article>
               <article class="bubble user">
                 <span>09:41 H55 美术报价群</span>
+                <label>
+                  需求指令
+                  <textarea id="digestCommand" class="compact-textarea" placeholder="例如：总结 H55 报价群今天的沟通内容，提取进展、风险、待办和需要确认的问题"></textarea>
+                </label>
                 <div class="toolbar-row">
                   <label>
                     群名称
@@ -134,6 +138,7 @@
             </div>
             <div class="composer">
               <button class="send-button" data-action="digest">生成</button>
+              <button class="tool-button sample" data-target="digestCommand">指令</button>
               <button class="tool-button sample" data-target="digestInput">示例</button>
               <button class="tool-button" data-load-slice="digestInput">POPO 切片</button>
               <span>生成日报 / 周报</span>

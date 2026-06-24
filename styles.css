@@ -433,6 +433,11 @@ textarea {
   line-height: 1.58;
 }
 
+.compact-textarea {
+  min-height: 78px;
+  margin: 8px 0 12px;
+}
+
 .bubble.user textarea,
 .bubble.user input,
 .bubble.user select {
@@ -482,6 +487,33 @@ textarea {
   margin-bottom: 10px;
   font-size: 15px;
   color: #ffffff;
+}
+
+.intent-card {
+  grid-column: 1 / -1;
+}
+
+.intent-card p {
+  margin-top: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip-row span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border: 1px solid rgba(215, 25, 32, 0.5);
+  border-radius: 999px;
+  padding: 0 10px;
+  color: #ffffff;
+  background: rgba(215, 25, 32, 0.18);
 }
 
 .result-card ul,
