@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>POPO AI</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">P</div>
+          <div>
+            <strong>POPO AI</strong>
+            <span>群聊工作流助手</span>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="功能导航">
+          <button class="nav-item active" data-panel="digest">群消息日报</button>
+          <button class="nav-item" data-panel="supplier">供应商摘要</button>
+          <button class="nav-item" data-panel="meeting">会议行动项</button>
+          <button class="nav-item" data-panel="process">流程提醒</button>
+          <button class="nav-item" data-panel="archive">文件归档</button>
+        </nav>
+
+        <section class="quota">
+          <div>
+            <span>今日自动整理</span>
+            <strong>18 个群</strong>
+          </div>
+          <div class="meter"><span style="width: 38%"></span></div>
+        </section>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <h1>POPO AI 模块 MVP</h1>
+            <p>面向 POPO 群聊的日报周报、供应商沟通、会议行动项、流程提醒和文件归档入口。</p>
+          </div>
+          <div class="status-pill">本地原型</div>
+        </header>
+
+        <section class="panel active" id="panel-digest">
+          <div class="panel-header">
+            <h2>群消息日报 / 周报</h2>
+            <div class="header-actions">
+              <button class="ghost-button sample" data-target="digestInput">填入示例</button>
+              <button class="ghost-button" data-load-slice="digestInput">载入 POPO 切片</button>
+            </div>
+          </div>
+          <div class="toolbar-row">
+            <label>
+              群名称
+              <input id="digestGroup" value="H55 美术报价群" />
+            </label>
+            <label>
+              周期
+              <select id="digestRange">
+                <option>过去一天</option>
+                <option>过去一周</option>
+              </select>
+            </label>
+          </div>
+          <textarea id="digestInput" placeholder="粘贴群消息，或后续接入 POPO 群消息 API 自动拉取"></textarea>
+          <button class="primary-action" data-action="digest">生成日报 / 周报</button>
+          <div class="result-grid" id="digestResult"></div>
+        </section>
+
+        <section class="panel" id="panel-supplier">
+          <div class="panel-header">
+            <h2>供应商沟通摘要</h2>
+            <div class="header-actions">
+              <button class="ghost-button sample" data-target="supplierInput">填入示例</button>
+              <button class="ghost-button" data-load-slice="supplierInput">载入 POPO 切片</button>
+            </div>
+          </div>
+          <textarea id="supplierInput" placeholder="粘贴供应商沟通记录，包含报价、交付时间、修改意见、待补材料等"></textarea>
+          <button class="primary-action" data-action="supplier">整理结构化记录</button>
+          <div class="answer-box" id="supplierResult"></div>
+        </section>
+
+        <section class="panel" id="panel-meeting">
+          <div class="panel-header">
+            <h2>会议后行动项</h2>
+            <button class="ghost-button sample" data-target="meetingInput">填入示例</button>
+          </div>
+          <textarea id="meetingInput" placeholder="粘贴会议纪要或群讨论"></textarea>
+          <button class="primary-action" data-action="meeting">提取行动项</button>
+          <div class="task-table" id="meetingResult"></div>
+        </section>
+
+        <section class="panel" id="panel-process">
+          <div class="panel-header">
+            <h2>流程提醒</h2>
+            <div class="header-actions">
+              <button class="ghost-button sample" data-target="processInput">填入示例</button>
+              <button class="ghost-button" data-load-slice="processInput">载入 POPO 切片</button>
+            </div>
+          </div>
+          <textarea id="processInput" placeholder="粘贴群聊内容，自动识别合同、立项、结算、验收等流程关键词"></textarea>
+          <button class="primary-action" data-action="process">识别流程并提醒</button>
+          <div class="result-grid" id="processResult"></div>
+        </section>
+
+        <section class="panel" id="panel-archive">
+          <div class="panel-header">
+            <h2>文件归档入口</h2>
+            <button class="ghost-button sample" data-target="archiveInput">填入示例</button>
+          </div>
+          <textarea id="archiveInput" placeholder="模拟群内 @机器人 + 附件信息，例如：@POPO AI 请归档这批角色原画验收材料，附件：报价单、合同、验收图"></textarea>
+          <button class="primary-action" data-action="archive">生成归档检查清单</button>
+          <div class="answer-box" id="archiveResult"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

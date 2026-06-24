@@ -1,0 +1,56 @@
+{
+  "source": "Sanitized POPO-like slice",
+  "generatedAt": "2026-06-24 13:05 Asia/Shanghai",
+  "queries": [
+    {
+      "keyword": "报价",
+      "count": 10
+    },
+    {
+      "keyword": "验收",
+      "count": 4
+    }
+  ],
+  "messages": [
+    {
+      "sessionName": "项目A-供应商甲-角色原画-测试群",
+      "memberName": "项目美术负责人",
+      "content": "[图片] 报价排期请再确认下；这个需求暂停，内部要调整下需求"
+    },
+    {
+      "sessionName": "项目A-供应商乙-角色制作-报价群",
+      "memberName": "供应商项目经理",
+      "content": "[图片附件] 排期报价已修改，麻烦最终确认下"
+    },
+    {
+      "sessionName": "项目A-供应商甲-角色原画-测试群",
+      "memberName": "供应商商务",
+      "content": "[图片] 高兴老师，报价排期，请再确认下吼；这个记得指派哟"
+    },
+    {
+      "sessionName": "项目A-供应商乙-角色制作-报价群",
+      "memberName": "项目对接人",
+      "content": "这三个需求的报价麻烦看下哈"
+    },
+    {
+      "sessionName": "项目A-供应商丙-立绘需求报价群",
+      "memberName": "内部需求同学",
+      "content": "电竞现代装-守夜人和新求生者出版编辑立绘的报价排期好了，辛苦老师们看一下"
+    },
+    {
+      "sessionName": "项目A-供应商丁-角色原画-报价群",
+      "memberName": "供应商PM",
+      "content": "歌剧演员的报价单辛苦老师看看哦"
+    },
+    {
+      "sessionName": "项目A-个人画师对接群",
+      "memberName": "画师对接人",
+      "content": "psd 我也提交这个平台了，是否要等他流转到已验收才能上传验收记录，这个验收记录上传在哪里？不要交 psd 文件，需求保密等级很高，只需要在平台提交 popo 群内项目组确认收稿的截图"
+    },
+    {
+      "sessionName": "项目A-个人画师对接群",
+      "memberName": "外部画师",
+      "content": "现在需要您在平台上传 POPO 验收记录，注意截图也不要带您制作的内容"
+    }
+  ]
+}
