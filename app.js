@@ -74,7 +74,7 @@ async function refreshAll() {
     renderClusters();
     keepSelection();
   } catch {
-    useDemoData();
+    await loadPublicSnapshot();
   }
 }
 
@@ -99,10 +99,10 @@ function connectEvents() {
       if (data.type === "error") elements.syncStatus.textContent = "同步异常";
     };
     events.onerror = () => {
-      if (!state.clusters.length) useDemoData();
+      if (!state.clusters.length) loadPublicSnapshot();
     };
   } catch {
-    if (!state.clusters.length) useDemoData();
+    if (!state.clusters.length) loadPublicSnapshot();
   }
 }
 
@@ -120,6 +120,24 @@ function updateOffline() {
   elements.syncMessageCount.textContent = "-";
   elements.syncAlertCount.textContent = "-";
   elements.clusterList.innerHTML = `<div class="empty-state">本地同步服务未连接。请在项目目录运行：<code>npm run server</code></div>`;
+}
+
+async function loadPublicSnapshot() {
+  try {
+    const snapshot = await fetchJson(`./public-snapshot.json?v=${Date.now()}`);
+    state.health = snapshot.health;
+    state.queues = snapshot.queues;
+    state.clusters = snapshot.clusters;
+    state.alerts = snapshot.alerts || [];
+    elements.serviceMini.classList.add("offline");
+    elements.syncStatus.textContent = `公网快照 ${formatTime(snapshot.generatedAt)}`;
+    elements.syncMessageCount.textContent = snapshot.health.messageCount;
+    elements.syncAlertCount.textContent = snapshot.health.alertCount;
+    renderQueues();
+    renderClusters();
+  } catch {
+    useDemoData();
+  }
 }
 
 function useDemoData() {

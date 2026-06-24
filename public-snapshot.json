@@ -1,0 +1,687 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-06-24T10:16:37.736Z",
+  "source": "local-redacted-snapshot",
+  "privacy": {
+    "rawMessageContent": false,
+    "senderDetail": false,
+    "localFilePath": false,
+    "imageBinary": false,
+    "note": "公网快照只包含本地分析后的摘要、优先级、标签和建议动作。"
+  },
+  "health": {
+    "ok": true,
+    "service": "POPO 助手公网快照",
+    "lastSyncAt": "2026-06-24T10:15:58.457Z",
+    "messageCount": 12,
+    "alertCount": 8,
+    "queueCounts": {
+      "pending": 1,
+      "mentions": 1,
+      "direct": 0,
+      "project": 3,
+      "business": 1,
+      "digest": 2,
+      "muted": 0
+    }
+  },
+  "queues": {
+    "pending": [
+      {
+        "msg_id": "pub-1rfexmj-0",
+        "t_msg": 1782288005375,
+        "time": "2026-06-24T08:00:05.375Z",
+        "sender": "已脱敏",
+        "sender_uid": "",
+        "group_id": "",
+        "group_name": "H55-动作-益格-报价群",
+        "sourceType": "group",
+        "content": "公网快照：@你；业务标签：报价、文件；项目标签：H55、角色、动作；包含图片材料。",
+        "priority": "P0",
+        "priorityReason": "群内 @你，需要优先处理",
+        "mentionsMe": true,
+        "businessTags": [
+          "报价",
+          "文件"
+        ],
+        "projectTags": [
+          "H55",
+          "角色",
+          "动作",
+          "外包",
+          "报价群"
+        ],
+        "localImages": []
+      }
+    ],
+    "mentions": [
+      {
+        "msg_id": "pub-1rfexmj-0",
+        "t_msg": 1782288005375,
+        "time": "2026-06-24T08:00:05.375Z",
+        "sender": "已脱敏",
+        "sender_uid": "",
+        "group_id": "",
+        "group_name": "H55-动作-益格-报价群",
+        "sourceType": "group",
+        "content": "公网快照：@你；业务标签：报价、文件；项目标签：H55、角色、动作；包含图片材料。",
+        "priority": "P0",
+        "priorityReason": "群内 @你，需要优先处理",
+        "mentionsMe": true,
+        "businessTags": [
+          "报价",
+          "文件"
+        ],
+        "projectTags": [
+          "H55",
+          "角色",
+          "动作",
+          "外包",
+          "报价群"
+        ],
+        "localImages": []
+      }
+    ],
+    "direct": [],
+    "project": [
+      {
+        "msg_id": "pub-1rfexmj-0",
+        "t_msg": 1782288005375,
+        "time": "2026-06-24T08:00:05.375Z",
+        "sender": "已脱敏",
+        "sender_uid": "",
+        "group_id": "",
+        "group_name": "H55-动作-益格-报价群",
+        "sourceType": "group",
+        "content": "公网快照：@你；业务标签：报价、文件；项目标签：H55、角色、动作；包含图片材料。",
+        "priority": "P0",
+        "priorityReason": "群内 @你，需要优先处理",
+        "mentionsMe": true,
+        "businessTags": [
+          "报价",
+          "文件"
+        ],
+        "projectTags": [
+          "H55",
+          "角色",
+          "动作",
+          "外包",
+          "报价群"
+        ],
+        "localImages": []
+      },
+      {
+        "msg_id": "pub-1kxe8fj-0",
+        "t_msg": 1782288140276,
+        "time": "2026-06-24T08:02:20.276Z",
+        "sender": "已脱敏",
+        "sender_uid": "",
+        "group_id": "",
+        "group_name": "H55-动作-益格-报价群",
+        "sourceType": "group",
+        "content": "公网快照：项目标签：H55、动作、报价群。",
+        "priority": "P4",
+        "priorityReason": "低价值确认类消息，默认静默",
+        "mentionsMe": false,
+        "businessTags": [],
+        "projectTags": [
+          "H55",
+          "动作",
+          "报价群"
+        ],
+        "localImages": []
+      },
+      {
+        "msg_id": "pub-10xmey5-0",
+        "t_msg": 1782284231503,
+        "time": "2026-06-24T06:57:11.503Z",
+        "sender": "已脱敏",
+        "sender_uid": "",
+        "group_id": "",
+        "group_name": "H55-场景制作-点晴-报价群",
+        "sourceType": "group",
+        "content": "公网快照：项目标签：H55、场景、报价群。",
+        "priority": "P2",
+        "priorityReason": "项目或业务相关，可进入摘要",
+        "mentionsMe": false,
+        "businessTags": [],
+        "projectTags": [
+          "H55",
+          "场景",
+          "报价群"
+        ],
+        "localImages": []
+      }
+    ],
+    "business": [
+      {
+        "msg_id": "pub-1rfexmj-0",
+        "t_msg": 1782288005375,
+        "time": "2026-06-24T08:00:05.375Z",
+        "sender": "已脱敏",
+        "sender_uid": "",
+        "group_id": "",
+        "group_name": "H55-动作-益格-报价群",
+        "sourceType": "group",
+        "content": "公网快照：@你；业务标签：报价、文件；项目标签：H55、角色、动作；包含图片材料。",
+        "priority": "P0",
+        "priorityReason": "群内 @你，需要优先处理",
+        "mentionsMe": true,
+        "businessTags": [
+          "报价",
+          "文件"
+        ],
+        "projectTags": [
+          "H55",
+          "角色",
+          "动作",
+          "外包",
+          "报价群"
+        ],
+        "localImages": []
+      }
+    ],
+    "digest": [
+      {
+        "msg_id": "pub-1kxe8fj-0",
+        "t_msg": 1782288140276,
+        "time": "2026-06-24T08:02:20.276Z",
+        "sender": "已脱敏",
+        "sender_uid": "",
+        "group_id": "",
+        "group_name": "H55-动作-益格-报价群",
+        "sourceType": "group",
+        "content": "公网快照：项目标签：H55、动作、报价群。",
+        "priority": "P4",
+        "priorityReason": "低价值确认类消息，默认静默",
+        "mentionsMe": false,
+        "businessTags": [],
+        "projectTags": [
+          "H55",
+          "动作",
+          "报价群"
+        ],
+        "localImages": []
+      },
+      {
+        "msg_id": "pub-10xmey5-0",
+        "t_msg": 1782284231503,
+        "time": "2026-06-24T06:57:11.503Z",
+        "sender": "已脱敏",
+        "sender_uid": "",
+        "group_id": "",
+        "group_name": "H55-场景制作-点晴-报价群",
+        "sourceType": "group",
+        "content": "公网快照：项目标签：H55、场景、报价群。",
+        "priority": "P2",
+        "priorityReason": "项目或业务相关，可进入摘要",
+        "mentionsMe": false,
+        "businessTags": [],
+        "projectTags": [
+          "H55",
+          "场景",
+          "报价群"
+        ],
+        "localImages": []
+      }
+    ],
+    "muted": []
+  },
+  "clusters": [
+    {
+      "id": "pub-1rfexmj",
+      "title": "H55-动作-益格-报价群",
+      "sourceType": "group",
+      "groupName": "H55-动作-益格-报价群",
+      "topic": "报价",
+      "priority": "P0",
+      "priorityReason": "群内 @你，需要优先处理",
+      "status": "new",
+      "messageCount": 3,
+      "mentionsMe": true,
+      "businessTags": [
+        "报价",
+        "文件"
+      ],
+      "projectTags": [
+        "H55",
+        "角色",
+        "动作",
+        "外包",
+        "报价群"
+      ],
+      "latestAt": 1782288005375,
+      "hasImages": true,
+      "summary": "群内 @你，涉及报价，需要优先确认。消息包含图片材料。",
+      "suggestedActions": [
+        "先确认是否需要你回复或推进。",
+        "查看上下文后生成回复草稿。",
+        "核对报价表中的资源、数量、环节、人天、合计和截图。",
+        "确认是否存在人天差异、增补或口径变更。",
+        "确认图片、截图、附件是否能归档，并补齐缺失材料。"
+      ],
+      "messages": [
+        {
+          "msg_id": "pub-1rfexmj-0",
+          "t_msg": 1782288005375,
+          "time": "2026-06-24T08:00:05.375Z",
+          "sender": "已脱敏",
+          "sender_uid": "",
+          "group_id": "",
+          "group_name": "H55-动作-益格-报价群",
+          "sourceType": "group",
+          "content": "公网快照：@你；业务标签：报价、文件；项目标签：H55、角色、动作；包含图片材料。",
+          "priority": "P0",
+          "priorityReason": "群内 @你，需要优先处理",
+          "mentionsMe": true,
+          "businessTags": [
+            "报价",
+            "文件"
+          ],
+          "projectTags": [
+            "H55",
+            "角色",
+            "动作",
+            "外包",
+            "报价群"
+          ],
+          "localImages": []
+        },
+        {
+          "msg_id": "pub-1rfexmj-1",
+          "t_msg": 1782272411146,
+          "time": "2026-06-24T03:40:11.146Z",
+          "sender": "已脱敏",
+          "sender_uid": "",
+          "group_id": "",
+          "group_name": "H55-动作-益格-报价群",
+          "sourceType": "group",
+          "content": "公网快照：业务标签：报价、文件；项目标签：H55、动作、报价群；包含图片材料。",
+          "priority": "P1",
+          "priorityReason": "项目报价相关",
+          "mentionsMe": false,
+          "businessTags": [
+            "报价",
+            "文件"
+          ],
+          "projectTags": [
+            "H55",
+            "动作",
+            "报价群"
+          ],
+          "localImages": []
+        },
+        {
+          "msg_id": "pub-1rfexmj-2",
+          "t_msg": 1782268922714,
+          "time": "2026-06-24T02:42:02.714Z",
+          "sender": "已脱敏",
+          "sender_uid": "",
+          "group_id": "",
+          "group_name": "H55-动作-益格-报价群",
+          "sourceType": "group",
+          "content": "公网快照：业务标签：报价；项目标签：H55、动作、报价群；包含图片材料。",
+          "priority": "P1",
+          "priorityReason": "项目报价相关",
+          "mentionsMe": false,
+          "businessTags": [
+            "报价"
+          ],
+          "projectTags": [
+            "H55",
+            "动作",
+            "报价群"
+          ],
+          "localImages": []
+        }
+      ]
+    },
+    {
+      "id": "pub-1kxe8fj",
+      "title": "H55-动作-益格-报价群",
+      "sourceType": "group",
+      "groupName": "H55-动作-益格-报价群",
+      "topic": "H55",
+      "priority": "P2",
+      "priorityReason": "项目或业务相关，可进入摘要",
+      "status": "new",
+      "messageCount": 6,
+      "mentionsMe": false,
+      "businessTags": [],
+      "projectTags": [
+        "H55",
+        "动作",
+        "报价群"
+      ],
+      "latestAt": 1782288140276,
+      "hasImages": false,
+      "summary": "H55-动作-益格-报价群 有H55相关讨论，建议进入日/周报摘要。",
+      "suggestedActions": [
+        "保留上下文，进入日/周报摘要即可。"
+      ],
+      "messages": [
+        {
+          "msg_id": "pub-1kxe8fj-0",
+          "t_msg": 1782288140276,
+          "time": "2026-06-24T08:02:20.276Z",
+          "sender": "已脱敏",
+          "sender_uid": "",
+          "group_id": "",
+          "group_name": "H55-动作-益格-报价群",
+          "sourceType": "group",
+          "content": "公网快照：项目标签：H55、动作、报价群。",
+          "priority": "P4",
+          "priorityReason": "低价值确认类消息，默认静默",
+          "mentionsMe": false,
+          "businessTags": [],
+          "projectTags": [
+            "H55",
+            "动作",
+            "报价群"
+          ],
+          "localImages": []
+        },
+        {
+          "msg_id": "pub-1kxe8fj-1",
+          "t_msg": 1782288082050,
+          "time": "2026-06-24T08:01:22.050Z",
+          "sender": "已脱敏",
+          "sender_uid": "",
+          "group_id": "",
+          "group_name": "H55-动作-益格-报价群",
+          "sourceType": "group",
+          "content": "公网快照：项目标签：H55、动作、报价群。",
+          "priority": "P4",
+          "priorityReason": "低价值确认类消息，默认静默",
+          "mentionsMe": false,
+          "businessTags": [],
+          "projectTags": [
+            "H55",
+            "动作",
+            "报价群"
+          ],
+          "localImages": []
+        },
+        {
+          "msg_id": "pub-1kxe8fj-2",
+          "t_msg": 1782272606223,
+          "time": "2026-06-24T03:43:26.223Z",
+          "sender": "已脱敏",
+          "sender_uid": "",
+          "group_id": "",
+          "group_name": "H55-动作-益格-报价群",
+          "sourceType": "group",
+          "content": "公网快照：项目标签：H55、动作、报价群。",
+          "priority": "P4",
+          "priorityReason": "低价值确认类消息，默认静默",
+          "mentionsMe": false,
+          "businessTags": [],
+          "projectTags": [
+            "H55",
+            "动作",
+            "报价群"
+          ],
+          "localImages": []
+        },
+        {
+          "msg_id": "pub-1kxe8fj-3",
+          "t_msg": 1782272510109,
+          "time": "2026-06-24T03:41:50.109Z",
+          "sender": "已脱敏",
+          "sender_uid": "",
+          "group_id": "",
+          "group_name": "H55-动作-益格-报价群",
+          "sourceType": "group",
+          "content": "公网快照：项目标签：H55、动作、报价群。",
+          "priority": "P2",
+          "priorityReason": "项目或业务相关，可进入摘要",
+          "mentionsMe": false,
+          "businessTags": [],
+          "projectTags": [
+            "H55",
+            "动作",
+            "报价群"
+          ],
+          "localImages": []
+        },
+        {
+          "msg_id": "pub-1kxe8fj-4",
+          "t_msg": 1782269151744,
+          "time": "2026-06-24T02:45:51.744Z",
+          "sender": "已脱敏",
+          "sender_uid": "",
+          "group_id": "",
+          "group_name": "H55-动作-益格-报价群",
+          "sourceType": "group",
+          "content": "公网快照：项目标签：H55、动作、报价群。",
+          "priority": "P4",
+          "priorityReason": "低价值确认类消息，默认静默",
+          "mentionsMe": false,
+          "businessTags": [],
+          "projectTags": [
+            "H55",
+            "动作",
+            "报价群"
+          ],
+          "localImages": []
+        },
+        {
+          "msg_id": "pub-1kxe8fj-5",
+          "t_msg": 1782267722142,
+          "time": "2026-06-24T02:22:02.142Z",
+          "sender": "已脱敏",
+          "sender_uid": "",
+          "group_id": "",
+          "group_name": "H55-动作-益格-报价群",
+          "sourceType": "group",
+          "content": "公网快照：项目标签：H55、动作、报价群。",
+          "priority": "P4",
+          "priorityReason": "低价值确认类消息，默认静默",
+          "mentionsMe": false,
+          "businessTags": [],
+          "projectTags": [
+            "H55",
+            "动作",
+            "报价群"
+          ],
+          "localImages": []
+        }
+      ]
+    },
+    {
+      "id": "pub-10xmey5",
+      "title": "H55-场景制作-点晴-报价群",
+      "sourceType": "group",
+      "groupName": "H55-场景制作-点晴-报价群",
+      "topic": "H55",
+      "priority": "P2",
+      "priorityReason": "项目或业务相关，可进入摘要",
+      "status": "new",
+      "messageCount": 3,
+      "mentionsMe": false,
+      "businessTags": [],
+      "projectTags": [
+        "H55",
+        "场景",
+        "报价群"
+      ],
+      "latestAt": 1782284231503,
+      "hasImages": false,
+      "summary": "H55-场景制作-点晴-报价群 有H55相关讨论，建议进入日/周报摘要。",
+      "suggestedActions": [
+        "保留上下文，进入日/周报摘要即可。"
+      ],
+      "messages": [
+        {
+          "msg_id": "pub-10xmey5-0",
+          "t_msg": 1782284231503,
+          "time": "2026-06-24T06:57:11.503Z",
+          "sender": "已脱敏",
+          "sender_uid": "",
+          "group_id": "",
+          "group_name": "H55-场景制作-点晴-报价群",
+          "sourceType": "group",
+          "content": "公网快照：项目标签：H55、场景、报价群。",
+          "priority": "P2",
+          "priorityReason": "项目或业务相关，可进入摘要",
+          "mentionsMe": false,
+          "businessTags": [],
+          "projectTags": [
+            "H55",
+            "场景",
+            "报价群"
+          ],
+          "localImages": []
+        },
+        {
+          "msg_id": "pub-10xmey5-1",
+          "t_msg": 1782283779176,
+          "time": "2026-06-24T06:49:39.176Z",
+          "sender": "已脱敏",
+          "sender_uid": "",
+          "group_id": "",
+          "group_name": "H55-场景制作-点晴-报价群",
+          "sourceType": "group",
+          "content": "公网快照：项目标签：H55、场景、报价群。",
+          "priority": "P4",
+          "priorityReason": "低价值确认类消息，默认静默",
+          "mentionsMe": false,
+          "businessTags": [],
+          "projectTags": [
+            "H55",
+            "场景",
+            "报价群"
+          ],
+          "localImages": []
+        },
+        {
+          "msg_id": "pub-10xmey5-2",
+          "t_msg": 1782283762401,
+          "time": "2026-06-24T06:49:22.401Z",
+          "sender": "已脱敏",
+          "sender_uid": "",
+          "group_id": "",
+          "group_name": "H55-场景制作-点晴-报价群",
+          "sourceType": "group",
+          "content": "公网快照：项目标签：H55、场景、报价群。",
+          "priority": "P2",
+          "priorityReason": "项目或业务相关，可进入摘要",
+          "mentionsMe": false,
+          "businessTags": [],
+          "projectTags": [
+            "H55",
+            "场景",
+            "报价群"
+          ],
+          "localImages": []
+        }
+      ]
+    }
+  ],
+  "alerts": [
+    {
+      "id": "pub-1x9wo63",
+      "msg_id": "",
+      "group_id": "",
+      "group_name": "H55-动作-益格-报价群",
+      "level": "高",
+      "title": "人天或报价口径存在差异",
+      "suggestion": "让内部对接人确认最终人天口径，并把差异原因写入报价记录。",
+      "content": "公网快照不包含原始消息正文。",
+      "sender": "已脱敏",
+      "t_msg": 1782268922714,
+      "time": "2026-06-24T02:42:02.714Z"
+    },
+    {
+      "id": "pub-vvmui",
+      "msg_id": "",
+      "group_id": "",
+      "group_name": "H55-动作-益格-报价群",
+      "level": "高",
+      "title": "报价材料需要复核",
+      "suggestion": "确认报价表中是否有资源、数量、环节、人天、合计和对应截图。",
+      "content": "公网快照不包含原始消息正文。",
+      "sender": "已脱敏",
+      "t_msg": 1782268922714,
+      "time": "2026-06-24T02:42:02.714Z"
+    },
+    {
+      "id": "pub-ra4q21",
+      "msg_id": "",
+      "group_id": "",
+      "group_name": "H55-动作-益格-报价群",
+      "level": "高",
+      "title": "人天或报价口径存在差异",
+      "suggestion": "让内部对接人确认最终人天口径，并把差异原因写入报价记录。",
+      "content": "公网快照不包含原始消息正文。",
+      "sender": "已脱敏",
+      "t_msg": 1782272411146,
+      "time": "2026-06-24T03:40:11.146Z"
+    },
+    {
+      "id": "pub-zjmm0o",
+      "msg_id": "",
+      "group_id": "",
+      "group_name": "H55-动作-益格-报价群",
+      "level": "高",
+      "title": "报价材料需要复核",
+      "suggestion": "确认报价表中是否有资源、数量、环节、人天、合计和对应截图。",
+      "content": "公网快照不包含原始消息正文。",
+      "sender": "已脱敏",
+      "t_msg": 1782272411146,
+      "time": "2026-06-24T03:40:11.146Z"
+    },
+    {
+      "id": "pub-l46w2a",
+      "msg_id": "",
+      "group_id": "",
+      "group_name": "H55-场景制作-点晴-报价群",
+      "level": "中",
+      "title": "资料或工具信息需要补齐",
+      "suggestion": "确认统计用途，必要时补名单、工具版本、权限或供应商侧联系人。",
+      "content": "公网快照不包含原始消息正文。",
+      "sender": "已脱敏",
+      "t_msg": 1782283762401,
+      "time": "2026-06-24T06:49:22.401Z"
+    },
+    {
+      "id": "pub-xjb91c",
+      "msg_id": "",
+      "group_id": "",
+      "group_name": "H55-场景制作-点晴-报价群",
+      "level": "中",
+      "title": "资料或工具信息需要补齐",
+      "suggestion": "确认统计用途，必要时补名单、工具版本、权限或供应商侧联系人。",
+      "content": "公网快照不包含原始消息正文。",
+      "sender": "已脱敏",
+      "t_msg": 1782284231503,
+      "time": "2026-06-24T06:57:11.503Z"
+    },
+    {
+      "id": "pub-1y74k4y",
+      "msg_id": "",
+      "group_id": "",
+      "group_name": "H55-动作-益格-报价群",
+      "level": "高",
+      "title": "人天或报价口径存在差异",
+      "suggestion": "让内部对接人确认最终人天口径，并把差异原因写入报价记录。",
+      "content": "公网快照不包含原始消息正文。",
+      "sender": "已脱敏",
+      "t_msg": 1782288005375,
+      "time": "2026-06-24T08:00:05.375Z"
+    },
+    {
+      "id": "pub-hh9yt5",
+      "msg_id": "",
+      "group_id": "",
+      "group_name": "H55-动作-益格-报价群",
+      "level": "高",
+      "title": "报价材料需要复核",
+      "suggestion": "确认报价表中是否有资源、数量、环节、人天、合计和对应截图。",
+      "content": "公网快照不包含原始消息正文。",
+      "sender": "已脱敏",
+      "t_msg": 1782288005375,
+      "time": "2026-06-24T08:00:05.375Z"
+    }
+  ]
+}

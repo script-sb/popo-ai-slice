@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "server": "node server/index.js",
-    "serve": "node server/index.js"
+    "serve": "node server/index.js",
+    "export:snapshot": "node server/export-public-snapshot.js"
   }
 }
