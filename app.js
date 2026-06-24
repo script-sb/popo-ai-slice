@@ -17,7 +17,8 @@ const state = {
   activeQueue: "pending",
   selectedClusterId: "",
   search: "",
-  health: null
+  health: null,
+  queueLocked: false
 };
 
 const elements = {
@@ -70,6 +71,7 @@ async function refreshAll() {
     state.clusters = clusters;
     state.alerts = alerts;
     updateHealth(health);
+    ensureActiveQueue();
     renderQueues();
     renderClusters();
     keepSelection();
@@ -133,6 +135,7 @@ async function loadPublicSnapshot() {
     elements.syncStatus.textContent = `公网快照 ${formatTime(snapshot.generatedAt)}`;
     elements.syncMessageCount.textContent = snapshot.health.messageCount;
     elements.syncAlertCount.textContent = snapshot.health.alertCount;
+    ensureActiveQueue();
     renderQueues();
     renderClusters();
   } catch {
@@ -151,15 +154,15 @@ function useDemoData() {
   state.health = {
     messageCount: messages.length,
     alertCount: 2,
-    queueCounts: { pending: 1, mentions: 1, direct: 0, project: 4, business: 1, digest: 2, muted: 1 }
+    queueCounts: { pending: 0, mentions: 1, direct: 0, project: 1, business: 0, digest: 1, muted: 1 }
   };
   state.queues = {
-    pending: [messages[0]],
+    pending: [],
     mentions: [messages[0]],
     direct: [],
-    project: messages,
-    business: [messages[0]],
-    digest: [messages[1], messages[3]],
+    project: [messages[3]],
+    business: [],
+    digest: [messages[1]],
     muted: [messages[2]]
   };
   state.clusters = [
@@ -246,11 +249,20 @@ function renderQueues() {
   elements.queueList.querySelectorAll("[data-queue]").forEach((button) => {
     button.addEventListener("click", () => {
       state.activeQueue = button.dataset.queue;
+      state.queueLocked = true;
       state.selectedClusterId = "";
       renderQueues();
       renderClusters();
     });
   });
+}
+
+function ensureActiveQueue() {
+  if (state.queueLocked) return;
+  const counts = state.health?.queueCounts || {};
+  if ((counts[state.activeQueue] || 0) > 0) return;
+  const next = queueMeta.find((queue) => (counts[queue.id] || 0) > 0);
+  if (next) state.activeQueue = next.id;
 }
 
 function renderClusters() {

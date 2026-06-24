@@ -110,15 +110,20 @@ function buildSafeQueues(clusters) {
   for (const cluster of clusters) {
     const representative = cluster.messages[0];
     if (!representative) continue;
-    if (["P0", "P1"].includes(cluster.priority)) queues.pending.push(representative);
-    if (cluster.mentionsMe) queues.mentions.push(representative);
-    if (cluster.sourceType === "direct") queues.direct.push(representative);
-    if (cluster.projectTags.length) queues.project.push(representative);
-    if (cluster.businessTags.length && cluster.priority !== "P4") queues.business.push(representative);
-    if (["P2", "P3"].includes(cluster.priority)) queues.digest.push(representative);
-    if (cluster.priority === "P4") queues.muted.push(representative);
+    queues[queueForCluster(cluster)].push(representative);
   }
   return queues;
+}
+
+function queueForCluster(cluster) {
+  if (cluster.sourceType === "direct") return "direct";
+  if (cluster.mentionsMe) return "mentions";
+  if (cluster.priority === "P4") return "muted";
+  if (["P0", "P1"].includes(cluster.priority) && !cluster.businessTags.length) return "pending";
+  if (cluster.businessTags.length) return "business";
+  if (cluster.projectTags.length) return "project";
+  if (["P2", "P3"].includes(cluster.priority)) return "digest";
+  return "digest";
 }
 
 function toSafeAlert(alert) {

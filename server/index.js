@@ -215,20 +215,40 @@ function analyzeMessage(message) {
 }
 
 function buildQueues() {
-  const messages = recentDecoratedMessages();
-  return {
-    pending: messages.filter((message) => ["P0", "P1"].includes(message.priority)),
-    mentions: messages.filter((message) => message.mentionsMe),
-    direct: messages.filter((message) => message.sourceType === "direct"),
-    project: messages.filter((message) => message.projectTags.length),
-    business: messages.filter((message) => message.businessTags.length && message.priority !== "P4"),
-    digest: messages.filter((message) => ["P2", "P3"].includes(message.priority)),
-    muted: messages.filter((message) => message.priority === "P4")
-  };
+  const queues = emptyQueues();
+  for (const cluster of buildClusters()) {
+    const representative = cluster.messages[0];
+    if (!representative) continue;
+    queues[queueForCluster(cluster)].push(representative);
+  }
+  return queues;
 }
 
 function buildQueueCounts() {
   return Object.fromEntries(Object.entries(buildQueues()).map(([key, items]) => [key, items.length]));
+}
+
+function emptyQueues() {
+  return {
+    pending: [],
+    mentions: [],
+    direct: [],
+    project: [],
+    business: [],
+    digest: [],
+    muted: []
+  };
+}
+
+function queueForCluster(cluster) {
+  if (cluster.sourceType === "direct") return "direct";
+  if (cluster.mentionsMe) return "mentions";
+  if (cluster.priority === "P4") return "muted";
+  if (["P0", "P1"].includes(cluster.priority) && !cluster.businessTags.length) return "pending";
+  if (cluster.businessTags.length) return "business";
+  if (cluster.projectTags.length) return "project";
+  if (["P2", "P3"].includes(cluster.priority)) return "digest";
+  return "digest";
 }
 
 function buildClusters() {
