@@ -14,262 +14,98 @@
           <div class="brand-mark">P</div>
           <div>
             <strong>POPO 助手</strong>
-            <span>群聊业务助手</span>
+            <span>本地分身工作台</span>
           </div>
         </div>
         <label class="search-box">
           <span>搜索</span>
-          <input type="search" placeholder="搜索群、供应商、待办或 POPO 文件" />
+          <input id="messageSearch" type="search" placeholder="搜索消息、群名、供应商、报价、人天或待办" />
         </label>
-        <div class="nav-tools" aria-label="快捷入口">
-          <button title="日报周报">报</button>
-          <button title="报价检查">价</button>
-          <button title="待办提醒">办</button>
-          <button title="文件调取">文</button>
+        <div class="service-mini" id="serviceMini">
+          <span id="syncStatus">未连接</span>
+          <button id="syncNowButton" type="button">同步</button>
         </div>
       </header>
 
-      <main class="board">
-        <aside class="left-pane">
-          <section class="side-panel">
-            <div class="section-title">
-              <h2>消息提醒</h2>
-              <span>今日</span>
+      <main class="workbench">
+        <section class="message-panel">
+          <div class="panel-head">
+            <div>
+              <h1>消息流</h1>
+              <p>按 POPO 消息类型分流，左侧看信息，右侧看处理建议。</p>
             </div>
-            <article class="notice-item">
+            <div class="sync-metrics" id="localSyncCard">
               <div>
-                <span>10 分钟前</span>
-                <strong>报价排期待确认</strong>
-                <p>供应商已更新 3 个需求的报价附件。</p>
+                <span>消息</span>
+                <strong id="syncMessageCount">-</strong>
               </div>
-              <div class="avatar">报</div>
-            </article>
-            <article class="notice-item">
               <div>
-                <span>2 小时前</span>
-                <strong>验收材料口径</strong>
-                <p>群内提醒截图不能包含制作内容。</p>
+                <span>风险</span>
+                <strong id="syncAlertCount">-</strong>
               </div>
-              <div class="avatar">验</div>
-            </article>
-            <article class="notice-item">
-              <div>
-                <span>昨天</span>
-                <strong>归档缺材料</strong>
-                <p>合同扫描件已到，营业执照仍缺失。</p>
-              </div>
-              <div class="avatar">档</div>
-            </article>
-          </section>
-
-          <section class="side-panel grow">
-            <div class="section-title">
-              <h2>智能建议</h2>
-              <span>自动推荐</span>
-            </div>
-            <article class="suggestion-item">
-              <button data-jump="digest">加入</button>
-              <div>
-                <strong>日报周报审核</strong>
-                <span>12 条待收集</span>
-              </div>
-            </article>
-            <article class="suggestion-item">
-              <button data-jump="supplier">加入</button>
-              <div>
-                <strong>供应商报价 Check</strong>
-                <span>4 个报价群命中</span>
-              </div>
-            </article>
-            <article class="suggestion-item">
-              <button data-jump="meeting">加入</button>
-              <div>
-                <strong>待办事项提醒</strong>
-                <span>3 个事项待确认</span>
-              </div>
-            </article>
-          </section>
-        </aside>
-
-        <section class="chat-pane">
-          <div class="chat-header">
-            <div class="header-actions">
-              <button title="更多">...</button>
-              <button title="视频">▣</button>
-              <button title="电话">☎</button>
-            </div>
-            <div class="chat-title">
-              <strong id="activeTitle">日报 / 周报收集生成审核</strong>
-              <span id="activeSubtitle">收集群消息，生成日报周报，并审核风险、待办和确认项</span>
-            </div>
-            <div class="agent-card">
-              <div class="avatar red">AI</div>
-              <span>POPO 助手</span>
             </div>
           </div>
 
-          <div class="panel active" id="panel-digest" data-title="日报 / 周报收集生成审核" data-subtitle="收集群消息，生成日报周报，并审核风险、待办和确认项">
-            <div class="message-stack">
-              <article class="bubble bot">
-                <span>09:25 POPO 助手</span>
-                <p>可以直接输入“总结 H55 报价群今天的沟通内容”，也可以说“总结供应商类群最近一周的风险和待办”。我会按采购 BP 规则识别报价、合同、APC/OA、结算和归档风险。</p>
-              </article>
-              <article class="bubble user text-only">
-                <span>09:41 你</span>
-                <p>总结 H55 报价群今天的沟通内容，提取进展、风险、待办和需要确认的问题。</p>
-              </article>
-            </div>
-            <div class="input-dock">
-              <article class="bubble user">
-                <span>输入对话内容</span>
-                <label>
-                  需求指令
-                  <textarea id="digestCommand" class="compact-textarea" placeholder="例如：总结 H55 报价群今天的沟通内容，提取进展、风险、待办和需要确认的问题"></textarea>
-                </label>
-                <div class="toolbar-row">
-                  <label>
-                    群名称
-                    <input id="digestGroup" value="H55 美术报价群" />
-                  </label>
-                  <label>
-                    周期
-                    <select id="digestRange">
-                      <option>过去一天</option>
-                      <option>过去一周</option>
-                    </select>
-                  </label>
-                </div>
-                <textarea id="digestInput" placeholder="粘贴群消息，或载入 POPO 切片"></textarea>
-              </article>
-              <div class="composer">
-                <button class="send-button" data-action="digest">生成</button>
-                <button class="tool-button sample" data-target="digestCommand">指令</button>
-                <button class="tool-button sample" data-target="digestInput">示例</button>
-                <button class="tool-button" data-load-slice="digestInput">POPO 切片</button>
-                <span>生成日报 / 周报</span>
-              </div>
-            </div>
-            <div class="result-grid" id="digestResult"></div>
+          <div class="feed-tabs" aria-label="消息类型">
+            <button class="active" data-feed="all" type="button">全部 <span id="countAll">0</span></button>
+            <button data-feed="group" type="button">群聊 <span id="countGroup">0</span></button>
+            <button data-feed="direct" type="button">私聊 <span id="countDirect">0</span></button>
+            <button data-feed="mention" type="button">@我 <span id="countMention">0</span></button>
           </div>
 
-          <div class="panel" id="panel-supplier" data-title="供应商报价 Check" data-subtitle="检查报价、人天、排期、材料和采购风险">
-            <div class="message-stack">
-              <article class="bubble bot">
-                <span>09:28 POPO 助手</span>
-                <p>粘贴供应商报价沟通后，我会检查报价表、人天、排期、材料完整性和采购风险。</p>
-              </article>
-            </div>
-            <div class="input-dock">
-              <article class="bubble user wide">
-                <textarea id="supplierInput" placeholder="粘贴供应商报价、排期、人天或报价表沟通记录"></textarea>
-              </article>
-              <div class="composer">
-                <button class="send-button" data-action="supplier">整理</button>
-                <button class="tool-button sample" data-target="supplierInput">示例</button>
-                <button class="tool-button" data-load-slice="supplierInput">POPO 切片</button>
-                <span>供应商报价检查</span>
-              </div>
-            </div>
-            <div class="answer-box" id="supplierResult"></div>
-          </div>
-
-          <div class="panel" id="panel-meeting" data-title="待办事项提醒" data-subtitle="从群讨论中提取负责人、截止时间、下一步和提醒项">
-            <div class="message-stack">
-              <article class="bubble bot">
-                <span>09:31 POPO 助手</span>
-                <p>粘贴群讨论或会议纪要后，我会拆出待办事项、负责人、截止时间和需要提醒的问题。</p>
-              </article>
-            </div>
-            <div class="input-dock">
-              <article class="bubble user wide">
-                <textarea id="meetingInput" placeholder="粘贴群讨论、会议纪要或需要跟进的事项"></textarea>
-              </article>
-              <div class="composer">
-                <button class="send-button" data-action="meeting">提取</button>
-                <button class="tool-button sample" data-target="meetingInput">示例</button>
-                <span>待办提醒</span>
-              </div>
-            </div>
-            <div class="task-table" id="meetingResult"></div>
-          </div>
-
-          <div class="panel" id="panel-archive" data-title="POPO 文件调取" data-subtitle="根据群聊、关键词或附件线索调取并检查 POPO 文件">
-            <div class="message-stack">
-              <article class="bubble bot">
-                <span>09:35 POPO 助手</span>
-                <p>输入群聊线索、文件名或 @POPO 助手，我会整理需要调取的 POPO 文件和缺失材料。</p>
-              </article>
-            </div>
-            <div class="input-dock">
-              <article class="bubble user wide">
-                <textarea id="archiveInput" placeholder="@POPO 助手 调取这批角色原画的报价单、合同、验收图和供应商材料"></textarea>
-              </article>
-              <div class="composer">
-                <button class="send-button" data-action="archive">调取</button>
-                <button class="tool-button sample" data-target="archiveInput">示例</button>
-                <span>POPO 文件调取</span>
-              </div>
-            </div>
-            <div class="answer-box" id="archiveResult"></div>
+          <div class="message-feed" id="messageFeed">
+            <div class="empty-state">正在连接本地同步服务...</div>
           </div>
         </section>
 
-        <aside class="right-pane">
-          <section class="bot-panel">
-            <div class="bot-head">
-              <h2>智能助手</h2>
-              <div class="avatar red">AI</div>
+        <section class="processing-panel">
+          <div class="panel-head">
+            <div>
+              <h2>处理建议</h2>
+              <p id="selectedHint">选择左侧消息后查看风险、待办和建议回复。</p>
             </div>
-            <div class="bot-tabs">
-              <button>公开</button>
-              <button>群聊</button>
-              <button class="active">直达</button>
-            </div>
-            <section class="local-sync-card" id="localSyncCard">
-              <div>
-                <strong>本地同步服务</strong>
-                <span id="syncStatus">未连接</span>
+            <button class="outline-button" id="loadLocalDigestButton" type="button">生成今日日报</button>
+          </div>
+
+          <article class="selected-message" id="selectedMessage">
+            <span>未选择消息</span>
+            <p>左侧会显示群聊、私聊、@我 三类消息。当前 MVP 已接入两个报价群，私聊和 @我 会在后端扩展后进入同一队列。</p>
+          </article>
+
+          <div class="action-grid">
+            <section class="action-card">
+              <h3>风险判断</h3>
+              <div id="riskList" class="action-list">
+                <p class="muted">暂无选中消息。</p>
               </div>
-              <button id="syncNowButton" type="button">同步</button>
-              <dl>
-                <div>
-                  <dt>消息</dt>
-                  <dd id="syncMessageCount">-</dd>
-                </div>
-                <div>
-                  <dt>风险</dt>
-                  <dd id="syncAlertCount">-</dd>
-                </div>
-              </dl>
-              <button class="ghost-sync-button" id="loadLocalDigestButton" type="button">载入今日日报</button>
             </section>
-            <label class="small-search">
-              <input type="search" placeholder="搜索" />
-            </label>
-            <nav class="scene-list" aria-label="POPO 助手模块">
-              <button class="scene-card active" data-panel="digest">
-                <span>09:00</span>
-                <strong>日报 / 周报收集生成审核</strong>
-                <small>收集、生成、风险审核</small>
-              </button>
-              <button class="scene-card" data-panel="supplier">
-                <span>10:00</span>
-                <strong>供应商报价 Check</strong>
-                <small>报价、人天、排期、材料</small>
-              </button>
-              <button class="scene-card" data-panel="meeting">
-                <span>11:00</span>
-                <strong>待办事项提醒</strong>
-                <small>负责人、截止时间、提醒</small>
-              </button>
-              <button class="scene-card" data-panel="archive">
-                <span>14:00</span>
-                <strong>POPO 文件调取</strong>
-                <small>文件名、群线索、附件</small>
-              </button>
-            </nav>
+
+            <section class="action-card">
+              <h3>待办建议</h3>
+              <div id="todoList" class="action-list">
+                <p class="muted">暂无选中消息。</p>
+              </div>
+            </section>
+          </div>
+
+          <section class="reply-draft">
+            <div>
+              <h3>建议回复草稿</h3>
+              <span>不会自动发送，需要你确认后再复制或接入发送流程。</span>
+            </div>
+            <textarea id="replyDraft" readonly placeholder="选择消息后生成建议回复草稿"></textarea>
           </section>
-        </aside>
+
+          <section class="digest-preview">
+            <div class="section-line">
+              <h3>今日日报预览</h3>
+              <span id="digestMeta">未生成</span>
+            </div>
+            <div id="digestPreview" class="digest-body">
+              <p class="muted">点击“生成今日日报”后，会根据本地已同步的 POPO 消息汇总进展、风险、待办和确认项。</p>
+            </div>
+          </section>
+        </section>
       </main>
     </div>
 
